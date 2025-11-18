@@ -24,6 +24,8 @@ use App\Controller\RencanaMingguanController;
 use App\Controller\KehadiranController;
 use App\Controller\DocumentController;
 use App\Controller\NotificationController;
+use App\Controller\SumberBelajarController;
+use App\Controller\RPSExportController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -193,6 +195,29 @@ $router->post('/rps/:id/versions/:version_number/activate', [RPSController::clas
 
 // RPS statistics
 $router->get('/rps/statistics', [RPSController::class, 'statistics'], [AuthMiddleware::class]);
+
+// Pustaka (Learning References)
+$router->get('/rps/:id/pustaka', [SumberBelajarController::class, 'getPustakaByRPS'], [AuthMiddleware::class]);
+$router->get('/pustaka/:id', [SumberBelajarController::class, 'getPustaka'], [AuthMiddleware::class]);
+$router->post('/pustaka', [SumberBelajarController::class, 'createPustaka'], [AuthMiddleware::class]);
+$router->put('/pustaka/:id', [SumberBelajarController::class, 'updatePustaka'], [AuthMiddleware::class]);
+$router->delete('/pustaka/:id', [SumberBelajarController::class, 'deletePustaka'], [AuthMiddleware::class]);
+
+// Media Pembelajaran (Learning Media)
+$router->get('/rps/:id/media-pembelajaran', [SumberBelajarController::class, 'getMediaByRPS'], [AuthMiddleware::class]);
+$router->get('/media-pembelajaran/:id', [SumberBelajarController::class, 'getMedia'], [AuthMiddleware::class]);
+$router->post('/media-pembelajaran', [SumberBelajarController::class, 'createMedia'], [AuthMiddleware::class]);
+$router->put('/media-pembelajaran/:id', [SumberBelajarController::class, 'updateMedia'], [AuthMiddleware::class]);
+$router->delete('/media-pembelajaran/:id', [SumberBelajarController::class, 'deleteMedia'], [AuthMiddleware::class]);
+
+// Sumber Belajar Statistics
+$router->get('/rps/:id/sumber-belajar-stats', [SumberBelajarController::class, 'getStats'], [AuthMiddleware::class]);
+
+// RPS Export
+$router->get('/rps/:id/export/markdown', [RPSExportController::class, 'exportMarkdown'], [AuthMiddleware::class]);
+$router->get('/rps/:id/export/html', [RPSExportController::class, 'exportHTML'], [AuthMiddleware::class]);
+$router->get('/rps/:id/export/json', [RPSExportController::class, 'exportJSON'], [AuthMiddleware::class]);
+$router->get('/rps/:id/preview', [RPSExportController::class, 'preview'], [AuthMiddleware::class]);
 
 // ============================================
 // RENCANA PEMBELAJARAN MINGGUAN (Weekly Learning Plan)
