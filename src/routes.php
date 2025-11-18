@@ -28,6 +28,8 @@ use App\Controller\DocumentController;
 use App\Controller\NotificationController;
 use App\Controller\SumberBelajarController;
 use App\Controller\RPSExportController;
+use App\Controller\AmbangBatasController;
+use App\Controller\AuditLogController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -432,6 +434,28 @@ $router->delete('/notifications/:id', [NotificationController::class, 'delete'],
 $router->post('/notifications/create', [NotificationController::class, 'create'], [AuthMiddleware::class]);
 $router->post('/notifications/broadcast', [NotificationController::class, 'broadcast'], [AuthMiddleware::class]);
 $router->post('/notifications/notify-role', [NotificationController::class, 'notifyByRole'], [AuthMiddleware::class]);
+
+// ============================================
+// AMBANG BATAS (THRESHOLDS/PASSING GRADES)
+// ============================================
+
+$router->get('/rps/:id/ambang-batas', [AmbangBatasController::class, 'getByRPS'], [AuthMiddleware::class]);
+$router->get('/rps/:id/ambang-batas/summary', [AmbangBatasController::class, 'getSummary'], [AuthMiddleware::class]);
+$router->post('/ambang-batas', [AmbangBatasController::class, 'create'], [AuthMiddleware::class]);
+$router->get('/ambang-batas/:id', [AmbangBatasController::class, 'show'], [AuthMiddleware::class]);
+$router->put('/ambang-batas/:id', [AmbangBatasController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/ambang-batas/:id', [AmbangBatasController::class, 'delete'], [AuthMiddleware::class]);
+$router->post('/rps/:id/ambang-batas/bulk', [AmbangBatasController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// ============================================
+// AUDIT LOG & ACTIVITY TRACKING
+// ============================================
+
+$router->get('/audit-logs', [AuditLogController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/audit-logs/recent', [AuditLogController::class, 'getRecent'], [AuthMiddleware::class]);
+$router->get('/audit-logs/me', [AuditLogController::class, 'getMyLogs'], [AuthMiddleware::class]);
+$router->get('/audit-logs/user/:user_id', [AuditLogController::class, 'getByUser'], [AuthMiddleware::class]);
+$router->get('/audit-logs/:table/:record_id', [AuditLogController::class, 'getByRecord'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
