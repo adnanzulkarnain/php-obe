@@ -356,6 +356,7 @@ class PenilaianService
 
     /**
      * Update enrollment grades
+     * Now also persists CPMK and CPL achievements
      */
     private function updateEnrollmentGrades(int $idEnrollment, int $userId): void
     {
@@ -368,11 +369,47 @@ class PenilaianService
         // Update enrollment
         $this->enrollmentRepository->updateGrades($idEnrollment, $nilaiAkhir, $nilaiHuruf);
 
+        // Persist CPMK achievements
+        $this->updateCPMKAchievements($idEnrollment);
+
         // Audit log
         $this->auditLog->log('enrollment', $idEnrollment, 'UPDATE_GRADES', null, [
             'nilai_akhir' => $nilaiAkhir,
             'nilai_huruf' => $nilaiHuruf
         ], $userId);
+    }
+
+    /**
+     * Update CPMK achievements for enrollment
+     * Persists to ketercapaian_cpmk table
+     */
+    private function updateCPMKAchievements(int $idEnrollment): void
+    {
+        // Get ambang batas
+        $ambangBatas = $this->repository->getAmbangBatasByEnrollment($idEnrollment);
+        $batasKelulusanCpmk = $ambangBatas['batas_kelulusan_cpmk'] ?? 40.01;
+
+        // Get all CPMK for this enrollment's RPS
+        $cpmkList = $this->repository->getAllCPMKForEnrollment($idEnrollment);
+
+        foreach ($cpmkList as $cpmk) {
+            $idCpmk = (int)$cpmk['id_cpmk'];
+
+            // Calculate CPMK achievement
+            $achievement = $this->repository->calculateCPMKAchievement($idEnrollment, $idCpmk);
+
+            if ($achievement !== null) {
+                $statusTercapai = $achievement >= $batasKelulusanCpmk;
+
+                // Persist to ketercapaian_cpmk table
+                $this->repository->upsertKetercapaianCPMK(
+                    $idEnrollment,
+                    $idCpmk,
+                    $achievement,
+                    $statusTercapai
+                );
+            }
+        }
     }
 
     /**
@@ -449,5 +486,111 @@ class PenilaianService
     public function getAllJenisPenilaian(): array
     {
         return $this->repository->getAllJenisPenilaian();
+    }
+
+    // ===================================
+    // KETERCAPAIAN CPMK & CPL METHODS
+    // ===================================
+
+    /**
+     * Get ketercapaian CPMK by enrollment
+     */
+    public function getKetercapaianCPMK(int $idEnrollment): array
+    {
+        return $this->repository->getKetercapaianCPMKByEnrollment($idEnrollment);
+    }
+
+    /**
+     * Get ketercapaian CPL by enrollment
+     */
+    public function getKetercapaianCPL(int $idEnrollment): array
+    {
+        return $this->repository->getKetercapaianCPLByEnrollment($idEnrollment);
+    }
+
+    /**
+     * Calculate and persist CPL achievements
+     * Aggregates from CPMK based on relasi_cpmk_cpl
+     */
+    public function aggregateCPLAchievements(int $idEnrollment, int $userId): array
+    {
+        // Get ambang batas
+        $ambangBatas = $this->repository->getAmbangBatasByEnrollment($idEnrollment);
+        $batasKelulusanCpl = $ambangBatas['batas_kelulusan_cpmk'] ?? 40.01; // Use CPMK threshold for now
+
+        // Calculate and persist CPL
+        $results = $this->repository->calculateAndPersistCPL($idEnrollment, $batasKelulusanCpl);
+
+        // Audit log
+        $this->auditLog->log('enrollment', $idEnrollment, 'AGGREGATE_CPL', null, [
+            'cpl_count' => count($results),
+            'results' => $results
+        ], $userId);
+
+        return $results;
+    }
+
+    /**
+     * Finalize grades for enrollment
+     * Persists CPMK and aggregates CPL achievements
+     */
+    public function finalizeGrades(int $idEnrollment, int $userId): array
+    {
+        // Validate enrollment exists
+        $enrollment = $this->enrollmentRepository->find($idEnrollment);
+        if (!$enrollment) {
+            throw new \Exception('Enrollment tidak ditemukan', 404);
+        }
+
+        // Update CPMK achievements (already called in updateEnrollmentGrades, but ensure it's done)
+        $this->updateCPMKAchievements($idEnrollment);
+
+        // Aggregate to CPL
+        $cplResults = $this->aggregateCPLAchievements($idEnrollment, $userId);
+
+        // Get final data
+        $nilaiAkhir = $this->repository->calculateNilaiAkhir($idEnrollment);
+        $cpmkAchievements = $this->repository->getKetercapaianCPMKByEnrollment($idEnrollment);
+        $cplAchievements = $this->repository->getKetercapaianCPLByEnrollment($idEnrollment);
+
+        return [
+            'id_enrollment' => $idEnrollment,
+            'nim' => $enrollment['nim'],
+            'nilai_akhir' => $nilaiAkhir,
+            'nilai_huruf' => $enrollment['nilai_huruf'],
+            'cpmk_achievements' => $cpmkAchievements,
+            'cpl_achievements' => $cplAchievements,
+            'finalized_at' => date('Y-m-d H:i:s')
+        ];
+    }
+
+    /**
+     * Finalize grades for entire kelas
+     */
+    public function finalizeKelasGrades(int $idKelas, int $userId): array
+    {
+        // Get all enrollments
+        $enrollments = $this->enrollmentRepository->findByKelas($idKelas);
+
+        $results = [
+            'total' => count($enrollments),
+            'finalized' => 0,
+            'errors' => []
+        ];
+
+        foreach ($enrollments as $enrollment) {
+            try {
+                $this->finalizeGrades($enrollment['id_enrollment'], $userId);
+                $results['finalized']++;
+            } catch (\Exception $e) {
+                $results['errors'][] = [
+                    'id_enrollment' => $enrollment['id_enrollment'],
+                    'nim' => $enrollment['nim'],
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return $results;
     }
 }

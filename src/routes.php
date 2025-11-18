@@ -16,6 +16,10 @@ use App\Controller\EnrollmentController;
 use App\Controller\RPSController;
 use App\Controller\CPMKController;
 use App\Controller\PenilaianController;
+use App\Controller\DosenController;
+use App\Controller\MahasiswaController;
+use App\Controller\MasterDataController;
+use App\Controller\AnalyticsController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -33,6 +37,39 @@ $router->post('/auth/logout', [AuthController::class, 'logout']);
 // Profile
 $router->get('/auth/profile', [AuthController::class, 'profile'], [AuthMiddleware::class]);
 $router->post('/auth/change-password', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
+
+// ============================================
+// MASTER DATA MANAGEMENT
+// ============================================
+
+// Fakultas
+$router->get('/fakultas', [MasterDataController::class, 'getAllFakultas'], [AuthMiddleware::class]);
+$router->get('/fakultas/:id', [MasterDataController::class, 'getFakultas'], [AuthMiddleware::class]);
+$router->post('/fakultas', [MasterDataController::class, 'createFakultas'], [AuthMiddleware::class]);
+$router->put('/fakultas/:id', [MasterDataController::class, 'updateFakultas'], [AuthMiddleware::class]);
+
+// Prodi
+$router->get('/prodi', [MasterDataController::class, 'getAllProdi'], [AuthMiddleware::class]);
+$router->get('/prodi/:id', [MasterDataController::class, 'getProdi'], [AuthMiddleware::class]);
+$router->post('/prodi', [MasterDataController::class, 'createProdi'], [AuthMiddleware::class]);
+$router->put('/prodi/:id', [MasterDataController::class, 'updateProdi'], [AuthMiddleware::class]);
+$router->get('/prodi/:id_prodi/mahasiswa-statistics', [MahasiswaController::class, 'getStatisticsByProdi'], [AuthMiddleware::class]);
+
+// Dosen
+$router->get('/dosen', [DosenController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/dosen/:id', [DosenController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/dosen', [DosenController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/dosen/:id', [DosenController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/dosen/:id', [DosenController::class, 'delete'], [AuthMiddleware::class]);
+$router->get('/dosen/:id/teaching-assignments', [DosenController::class, 'getTeachingAssignments'], [AuthMiddleware::class]);
+
+// Mahasiswa
+$router->get('/mahasiswa', [MahasiswaController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim', [MahasiswaController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/mahasiswa', [MahasiswaController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/mahasiswa/:nim', [MahasiswaController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/mahasiswa/:nim', [MahasiswaController::class, 'delete'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/angkatan/:angkatan', [MahasiswaController::class, 'getByAngkatan'], [AuthMiddleware::class]);
 
 // ============================================
 // KURIKULUM MANAGEMENT
@@ -210,6 +247,29 @@ $router->post('/kelas/:id/recalculate-grades', [PenilaianController::class, 'rec
 
 // Master Data
 $router->get('/jenis-penilaian', [PenilaianController::class, 'getAllJenisPenilaian'], [AuthMiddleware::class]);
+
+// Ketercapaian CPMK & CPL
+$router->get('/enrollment/:id/ketercapaian-cpmk', [PenilaianController::class, 'getKetercapaianCPMK'], [AuthMiddleware::class]);
+$router->get('/enrollment/:id/ketercapaian-cpl', [PenilaianController::class, 'getKetercapaianCPL'], [AuthMiddleware::class]);
+
+// Finalisasi Nilai
+$router->post('/enrollment/:id/finalize-grades', [PenilaianController::class, 'finalizeGrades'], [AuthMiddleware::class]);
+$router->post('/kelas/:id/finalize-grades', [PenilaianController::class, 'finalizeKelasGrades'], [AuthMiddleware::class]);
+
+// ============================================
+// ANALYTICS & REPORTING
+// ============================================
+
+// Dashboard
+$router->get('/analytics/dashboard', [AnalyticsController::class, 'getDashboard'], [AuthMiddleware::class]);
+$router->get('/analytics/trends', [AnalyticsController::class, 'getTrends'], [AuthMiddleware::class]);
+
+// CPMK & CPL Reports
+$router->get('/analytics/kelas/:id/cpmk-report', [AnalyticsController::class, 'getCPMKReportByKelas'], [AuthMiddleware::class]);
+$router->get('/analytics/kurikulum/:id/cpl-report', [AnalyticsController::class, 'getCPLReportByKurikulum'], [AuthMiddleware::class]);
+
+// Student Performance
+$router->get('/analytics/mahasiswa/:nim/performance', [AnalyticsController::class, 'getMahasiswaPerformance'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check

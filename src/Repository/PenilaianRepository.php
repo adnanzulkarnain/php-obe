@@ -397,4 +397,192 @@ class PenilaianRepository extends BaseRepository
 
         return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_jenis'];
     }
+
+    // ===================================
+    // KETERCAPAIAN CPMK METHODS
+    // ===================================
+
+    /**
+     * Upsert ketercapaian CPMK
+     * Persist CPMK achievement after nilai input
+     */
+    public function upsertKetercapaianCPMK(int $idEnrollment, int $idCpmk, float $nilaiCpmk, bool $statusTercapai): int
+    {
+        $sql = "
+            INSERT INTO ketercapaian_cpmk
+            (id_enrollment, id_cpmk, nilai_cpmk, status_tercapai, created_at, updated_at)
+            VALUES
+            (:id_enrollment, :id_cpmk, :nilai_cpmk, :status_tercapai, NOW(), NOW())
+            ON CONFLICT (id_enrollment, id_cpmk)
+            DO UPDATE SET
+                nilai_cpmk = EXCLUDED.nilai_cpmk,
+                status_tercapai = EXCLUDED.status_tercapai,
+                updated_at = NOW()
+            RETURNING id_ketercapaian
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'id_enrollment' => $idEnrollment,
+            'id_cpmk' => $idCpmk,
+            'nilai_cpmk' => $nilaiCpmk,
+            'status_tercapai' => $statusTercapai
+        ]);
+
+        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_ketercapaian'];
+    }
+
+    /**
+     * Get all CPMK for an enrollment's RPS
+     */
+    public function getAllCPMKForEnrollment(int $idEnrollment): array
+    {
+        $sql = "
+            SELECT DISTINCT c.id_cpmk
+            FROM enrollment e
+            JOIN kelas k ON e.id_kelas = k.id_kelas
+            JOIN cpmk c ON c.id_rps = k.id_rps
+            WHERE e.id_enrollment = :id_enrollment
+        ";
+
+        return $this->query($sql, ['id_enrollment' => $idEnrollment]);
+    }
+
+    /**
+     * Get ketercapaian CPMK by enrollment
+     */
+    public function getKetercapaianCPMKByEnrollment(int $idEnrollment): array
+    {
+        $sql = "
+            SELECT
+                kc.*,
+                c.kode_cpmk,
+                c.deskripsi as deskripsi_cpmk
+            FROM ketercapaian_cpmk kc
+            JOIN cpmk c ON kc.id_cpmk = c.id_cpmk
+            WHERE kc.id_enrollment = :id_enrollment
+            ORDER BY c.urutan ASC
+        ";
+
+        return $this->query($sql, ['id_enrollment' => $idEnrollment]);
+    }
+
+    // ===================================
+    // KETERCAPAIAN CPL METHODS
+    // ===================================
+
+    /**
+     * Calculate and upsert ketercapaian CPL
+     * Aggregates from CPMK achievements using relasi_cpmk_cpl
+     */
+    public function calculateAndPersistCPL(int $idEnrollment, float $batasKelulusanCpl = 40.01): array
+    {
+        $sql = "
+            SELECT
+                rcl.id_cpl,
+                cpl.kode_cpl,
+                cpl.deskripsi as deskripsi_cpl,
+                -- Weighted average of CPMK achievements
+                SUM(kc.nilai_cpmk * rcl.bobot_kontribusi / 100) / NULLIF(SUM(rcl.bobot_kontribusi / 100), 0) as nilai_cpl
+            FROM enrollment e
+            JOIN kelas k ON e.id_kelas = k.id_kelas
+            JOIN cpmk cm ON cm.id_rps = k.id_rps
+            JOIN ketercapaian_cpmk kc ON kc.id_enrollment = e.id_enrollment AND kc.id_cpmk = cm.id_cpmk
+            JOIN relasi_cpmk_cpl rcl ON rcl.id_cpmk = cm.id_cpmk
+            JOIN cpl ON cpl.id_cpl = rcl.id_cpl
+            WHERE e.id_enrollment = :id_enrollment
+            GROUP BY rcl.id_cpl, cpl.kode_cpl, cpl.deskripsi
+        ";
+
+        $cplResults = $this->query($sql, ['id_enrollment' => $idEnrollment]);
+
+        $results = [];
+        foreach ($cplResults as $cpl) {
+            $nilaiCpl = (float)$cpl['nilai_cpl'];
+            $statusTercapai = $nilaiCpl >= $batasKelulusanCpl;
+
+            $idKetercapaian = $this->upsertKetercapaianCPL(
+                $idEnrollment,
+                (int)$cpl['id_cpl'],
+                $nilaiCpl,
+                $statusTercapai
+            );
+
+            $results[] = [
+                'id_ketercapaian' => $idKetercapaian,
+                'id_cpl' => $cpl['id_cpl'],
+                'kode_cpl' => $cpl['kode_cpl'],
+                'nilai_cpl' => $nilaiCpl,
+                'status_tercapai' => $statusTercapai
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Upsert ketercapaian CPL
+     */
+    public function upsertKetercapaianCPL(int $idEnrollment, int $idCpl, float $nilaiCpl, bool $statusTercapai): int
+    {
+        $sql = "
+            INSERT INTO ketercapaian_cpl
+            (id_enrollment, id_cpl, nilai_cpl, status_tercapai, created_at, updated_at)
+            VALUES
+            (:id_enrollment, :id_cpl, :nilai_cpl, :status_tercapai, NOW(), NOW())
+            ON CONFLICT (id_enrollment, id_cpl)
+            DO UPDATE SET
+                nilai_cpl = EXCLUDED.nilai_cpl,
+                status_tercapai = EXCLUDED.status_tercapai,
+                updated_at = NOW()
+            RETURNING id_ketercapaian
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'id_enrollment' => $idEnrollment,
+            'id_cpl' => $idCpl,
+            'nilai_cpl' => $nilaiCpl,
+            'status_tercapai' => $statusTercapai
+        ]);
+
+        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_ketercapaian'];
+    }
+
+    /**
+     * Get ketercapaian CPL by enrollment
+     */
+    public function getKetercapaianCPLByEnrollment(int $idEnrollment): array
+    {
+        $sql = "
+            SELECT
+                kcpl.*,
+                cpl.kode_cpl,
+                cpl.deskripsi as deskripsi_cpl,
+                cpl.kategori
+            FROM ketercapaian_cpl kcpl
+            JOIN cpl ON kcpl.id_cpl = cpl.id_cpl
+            WHERE kcpl.id_enrollment = :id_enrollment
+            ORDER BY cpl.kategori, cpl.urutan ASC
+        ";
+
+        return $this->query($sql, ['id_enrollment' => $idEnrollment]);
+    }
+
+    /**
+     * Get ambang batas from RPS
+     */
+    public function getAmbangBatasByEnrollment(int $idEnrollment): ?array
+    {
+        $sql = "
+            SELECT ab.*
+            FROM enrollment e
+            JOIN kelas k ON e.id_kelas = k.id_kelas
+            JOIN ambang_batas ab ON ab.id_rps = k.id_rps
+            WHERE e.id_enrollment = :id_enrollment
+            LIMIT 1
+        ";
+
+        return $this->queryOne($sql, ['id_enrollment' => $idEnrollment]);
+    }
 }
