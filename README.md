@@ -1,14 +1,8 @@
-# 📚 Dokumentasi Sistem Informasi Kurikulum OBE v3.0
+# Sistem Informasi Kurikulum OBE
 
-**Sistem Manajemen Kurikulum Outcome-Based Education dengan Multi-Curriculum Support**
+Sistem Informasi Kurikulum berbasis Outcome-Based Education (OBE) dengan Multi-Curriculum Support untuk perguruan tinggi.
 
----
-
-## 🎯 Ringkasan Proyek
-
-Sistem Informasi Kurikulum OBE adalah platform digital komprehensif untuk mendukung implementasi Outcome-Based Education di perguruan tinggi, dengan fitur utama **Kurikulum Management** yang memungkinkan pengelolaan multiple curricula secara paralel.
-
-### Fitur Utama
+## 🎯 Fitur Utama
 
 - ✅ **Multi-Curriculum Support** - Kelola beberapa kurikulum secara bersamaan
 - ✅ **CPL & CPMK Management** - Definisi dan pemetaan capaian pembelajaran
@@ -17,89 +11,54 @@ Sistem Informasi Kurikulum OBE adalah platform digital komprehensif untuk menduk
 - ✅ **Analytics Dashboard** - Monitoring dan pelaporan OBE compliance
 - ✅ **Audit Trail** - Logging lengkap untuk akreditasi
 
----
+## 🛠️ Technology Stack
 
-## 📄 Dokumen Yang Tersedia
+- **Backend**: PHP 8.3
+- **Database**: PostgreSQL 14+
+- **Authentication**: JWT
+- **Architecture**: Clean Architecture (Repository Pattern, Service Layer)
 
-### 1. Software Specification Document (SDD)
-**File:** `OBE-System-Specification-Document.md`
+## 📋 Prerequisites
 
-Dokumen spesifikasi lengkap meliputi:
-- Executive Summary & System Architecture
-- Database Design (ERD & Schema)
-- User Roles & Permissions Matrix
-- 13 Functional Requirements (FR-001 s/d FR-013)
-- Non-Functional Requirements (Performance, Security, dll)
-- Testing Strategy & Success Metrics
-- Implementation Timeline (6 phases)
-- API Design & Technical Specifications
+- PHP >= 8.3
+- PostgreSQL >= 14
+- Composer
+- Apache/Nginx with mod_rewrite
 
----
+## 🚀 Installation
 
-### 2. Database Schema (SQL DDL)
-**File:** `OBE-Database-Schema-v3-WITH-KURIKULUM.sql`
+### 1. Clone Repository
 
-Schema database PostgreSQL lengkap dengan:
-- 30+ tables dengan relasi lengkap
-- Core Entity: Kurikulum, CPL, CPMK, MK, RPS, Kelas, Enrollment
-- Triggers untuk auto-calculation & validation
-- Materialized Views untuk analytics
-- Indexes untuk performa optimal
-- Business rule enforcement (BR-K01 s/d BR-K37)
-- Sample data untuk testing
+```bash
+git clone <repository-url>
+cd php-obe
+```
 
----
+### 2. Install Dependencies
 
-### 3. Use Cases: Kurikulum Management
-**File:** `Use-Cases-Kurikulum-Management.md`
+```bash
+composer install
+```
 
-10 use cases detail untuk Kurikulum Management:
-- UC-K01: Create New Curriculum
-- UC-K02: Approve Curriculum
-- UC-K03: Activate Curriculum
-- UC-K04: Define CPL for Curriculum
-- UC-K05: Add Mata Kuliah to Curriculum
-- UC-K06: Create MK Mapping Between Curricula
-- UC-K07: Assign Student to Curriculum
-- UC-K08: Compare Curricula
-- UC-K09: Deactivate Curriculum
-- UC-K10: Archive Curriculum
+### 3. Setup Environment
 
----
+```bash
+cp .env.example .env
+```
 
-### 4. Implementation Guide
-**File:** `Implementation-Guide-Quick-Reference.md`
+Edit `.env` file dengan konfigurasi database Anda:
 
-Panduan praktis untuk development team:
-- Database implementation checklist
-- Migration strategy (v2 → v3)
-- Application layer examples (TypeScript/Node.js)
-- Testing checklist (unit & integration tests)
-- Performance optimization tips
-- Deployment checklist
-- Common issues & troubleshooting
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=obe_system
+DB_USER=obe_user
+DB_PASSWORD=your_password
 
----
+JWT_SECRET=your_secret_key_here
+```
 
-## 🔑 Business Rules Kunci
-
-### Kurikulum Management
-
-| Rule ID | Deskripsi | Status |
-|---------|-----------|--------|
-| BR-K01 | Mahasiswa mengikuti satu kurikulum sepanjang studi (IMMUTABLE) | ✅ Enforced |
-| BR-K02 | MK dengan kode sama di kurikulum berbeda = MK berbeda | ✅ Composite PK |
-| BR-K03 | MK tidak dapat dihapus dari kurikulum (soft delete only) | ✅ Trigger |
-| BR-K04 | Mahasiswa hanya bisa ambil MK dari kurikulumnya | ✅ Trigger |
-| BR-K05 | Support 2+ kurikulum berjalan paralel | ✅ Multiple active |
-| BR-K06 | Pemetaan MK antar kurikulum untuk konversi | ✅ Table mapping |
-| BR-K07 | CPL terikat ke kurikulum (bisa berbeda antar kurikulum) | ✅ FK constraint |
-
----
-
-## 🚀 Quick Start
-
-### 1. Setup Database
+### 4. Setup Database
 
 ```bash
 # Create database
@@ -107,63 +66,239 @@ createdb obe_system
 
 # Execute schema
 psql -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
-
-# Verify
-psql -d obe_system -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';"
 ```
 
-### 2. Insert Master Data
+### 5. Create Storage Directories
 
-```sql
--- Fakultas & Prodi
-INSERT INTO fakultas VALUES ('FTI', 'Fakultas Teknologi Industri');
-INSERT INTO prodi VALUES ('TIF', 'FTI', 'Teknik Informatika', 'S1', 'A');
-
--- Kurikulum
-INSERT INTO kurikulum (id_prodi, kode_kurikulum, nama_kurikulum, tahun_berlaku, status, is_primary)
-VALUES ('TIF', 'K2024', 'Kurikulum OBE 2024', 2024, 'aktif', TRUE);
+```bash
+mkdir -p storage/uploads
+mkdir -p logs
+chmod -R 775 storage logs
 ```
 
+### 6. Configure Web Server
+
+#### Apache
+
+Create virtual host:
+
+```apache
+<VirtualHost *:80>
+    ServerName obe-system.local
+    DocumentRoot /path/to/php-obe/public
+
+    <Directory /path/to/php-obe/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/obe-error.log
+    CustomLog ${APACHE_LOG_DIR}/obe-access.log combined
+</VirtualHost>
+```
+
+#### Nginx
+
+```nginx
+server {
+    listen 80;
+    server_name obe-system.local;
+    root /path/to/php-obe/public;
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+```
+
+### 7. Start Development Server
+
+Alternatively, you can use PHP built-in server for development:
+
+```bash
+php -S localhost:8000 -t public
+```
+
+## 📚 API Documentation
+
+### Base URL
+
+```
+http://localhost:8000/api
+```
+
+### Authentication
+
+All protected endpoints require Bearer token in Authorization header:
+
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+### Endpoints
+
+#### Authentication
+
+- `POST /api/auth/login` - Login
+- `POST /api/auth/logout` - Logout
+- `GET /api/auth/profile` - Get user profile
+- `POST /api/auth/change-password` - Change password
+
+#### Kurikulum Management
+
+- `GET /api/kurikulum` - Get all kurikulum
+- `GET /api/kurikulum/:id` - Get kurikulum detail
+- `POST /api/kurikulum` - Create kurikulum (UC-K01)
+- `POST /api/kurikulum/:id/approve` - Approve kurikulum (UC-K02)
+- `POST /api/kurikulum/:id/activate` - Activate kurikulum (UC-K03)
+- `POST /api/kurikulum/:id/deactivate` - Deactivate kurikulum (UC-K09)
+- `GET /api/kurikulum/compare?ids=1,2` - Compare kurikulum (UC-K08)
+
+#### CPL Management
+
+- `GET /api/cpl?id_kurikulum=1` - Get CPL by kurikulum
+- `POST /api/cpl` - Create CPL (UC-K04)
+- `PUT /api/cpl/:id` - Update CPL
+- `DELETE /api/cpl/:id` - Deactivate CPL
+
+#### Mata Kuliah Management
+
+- `GET /api/matakuliah?id_kurikulum=1` - Get MK by kurikulum
+- `POST /api/matakuliah` - Create MK (UC-K05)
+- `PUT /api/matakuliah/:kode_mk/:id_kurikulum` - Update MK
+- `DELETE /api/matakuliah/:kode_mk/:id_kurikulum` - Deactivate MK
+
+### Example Request
+
+```bash
+# Login
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "kaprodi",
+    "password": "password123"
+  }'
+
+# Create Kurikulum
+curl -X POST http://localhost:8000/api/kurikulum \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "id_prodi": "TIF",
+    "kode_kurikulum": "K2024",
+    "nama_kurikulum": "Kurikulum OBE 2024",
+    "tahun_berlaku": 2024,
+    "deskripsi": "Kurikulum berbasis OBE"
+  }'
+```
+
+## 🏗️ Project Structure
+
+```
+php-obe/
+├── public/              # Entry point
+│   ├── index.php
+│   └── .htaccess
+├── src/
+│   ├── Config/          # Configuration
+│   │   └── Database.php
+│   ├── Core/            # Core classes
+│   │   ├── Router.php
+│   │   ├── Request.php
+│   │   ├── Response.php
+│   │   └── BaseRepository.php
+│   ├── Middleware/      # Middleware
+│   │   ├── AuthMiddleware.php
+│   │   └── CorsMiddleware.php
+│   ├── Entity/          # Entity models
+│   │   ├── Kurikulum.php
+│   │   ├── CPL.php
+│   │   └── MataKuliah.php
+│   ├── Repository/      # Data access layer
+│   │   ├── KurikulumRepository.php
+│   │   ├── CPLRepository.php
+│   │   └── MataKuliahRepository.php
+│   ├── Service/         # Business logic
+│   │   ├── KurikulumService.php
+│   │   ├── CPLService.php
+│   │   └── MataKuliahService.php
+│   ├── Controller/      # HTTP controllers
+│   │   ├── AuthController.php
+│   │   ├── KurikulumController.php
+│   │   ├── CPLController.php
+│   │   └── MataKuliahController.php
+│   ├── Utils/           # Helper functions
+│   │   └── JWTHelper.php
+│   └── routes.php       # Route definitions
+├── storage/
+│   └── uploads/         # Uploaded files
+├── logs/                # Application logs
+├── .env.example
+├── composer.json
+└── README.md
+```
+
+## 🧪 Testing
+
+Run PHP Code Sniffer:
+
+```bash
+composer cs
+```
+
+Run unit tests (when available):
+
+```bash
+composer test
+```
+
+## 🔒 Security
+
+- All passwords are hashed using bcrypt
+- JWT tokens expire after 2 hours
+- CSRF protection enabled
+- SQL injection prevention via prepared statements
+- XSS prevention via input sanitization
+- All write operations are logged in audit trail
+
+## 📝 Business Rules
+
+Key business rules enforced by the system:
+
+- **BR-K01**: Mahasiswa mengikuti satu kurikulum sepanjang studi (IMMUTABLE)
+- **BR-K02**: MK dengan kode sama di kurikulum berbeda = MK berbeda
+- **BR-K03**: MK tidak dapat dihapus dari kurikulum (soft delete only)
+- **BR-K04**: Mahasiswa hanya bisa ambil MK dari kurikulumnya
+- **BR-K05**: Support 2+ kurikulum berjalan paralel
+- **BR-K06**: Pemetaan MK antar kurikulum untuk konversi
+- **BR-K07**: CPL terikat ke kurikulum (bisa berbeda antar kurikulum)
+
+## 👥 User Roles
+
+- **Admin**: System administration
+- **Kaprodi**: Manage kurikulum, approve RPS, analytics
+- **Dosen**: Create RPS, input nilai, manage kelas
+- **Mahasiswa**: View RPS, check nilai, track progress
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+## 👨‍💻 Development Team
+
+For support and questions, please contact the development team.
+
 ---
 
-## 📈 Implementation Timeline
-
-| Phase | Duration | Deliverables |
-|-------|----------|--------------|
-| **Phase 1: Foundation** | Week 1-2 | Database setup, master data, auth |
-| **Phase 2: Kurikulum** | Week 3-4 | Kurikulum CRUD, CPL, MK management |
-| **Phase 3: RPS** | Week 5-6 | RPS creation, CPMK, approval workflow |
-| **Phase 4: Kelas & Enrollment** | Week 7-8 | Class management, student enrollment |
-| **Phase 5: Penilaian** | Week 9-10 | Assessment, calculation, grading |
-| **Phase 6: Analytics** | Week 11-12 | Dashboards, reports, materialized views |
-
-**Total:** 12 weeks for MVP
-
----
-
-## 👥 User Roles & Access
-
-| Role | Key Functions |
-|------|---------------|
-| **Kaprodi** | Manage kurikulum, CPL, approve RPS, view analytics |
-| **Dosen** | Create RPS, define CPMK, input nilai, view class data |
-| **Mahasiswa** | View RPS, check nilai, track CPMK progress |
-| **Admin** | Manage users, system config, data import/export |
-
----
-
-## 📝 Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| **v1.0** | Oct 22, 2025 | Initial draft - basic OBE features |
-| **v2.0** | Oct 22, 2025 | Major revision - fixed database design |
-| **v3.0** | Oct 22, 2025 | **Current** - Added Kurikulum Management |
-
----
-
-**Last Updated:** October 22, 2025  
-**Document Version:** 3.0  
-**Status:** Ready for Implementation
-
-**Semoga sukses dengan implementasinya! 🚀**
+**Version**: 1.0.0
+**Last Updated**: November 2024
+**Status**: Development
