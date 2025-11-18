@@ -22,6 +22,14 @@ use App\Controller\FakultasController;
 use App\Controller\ProdiController;
 use App\Controller\PrasyaratMKController;
 use App\Controller\AnalyticsController;
+use App\Controller\RencanaMingguanController;
+use App\Controller\KehadiranController;
+use App\Controller\DocumentController;
+use App\Controller\NotificationController;
+use App\Controller\SumberBelajarController;
+use App\Controller\RPSExportController;
+use App\Controller\AmbangBatasController;
+use App\Controller\AuditLogController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -158,6 +166,57 @@ $router->post('/rps/:id/versions/:version_number/activate', [RPSController::clas
 
 // RPS statistics
 $router->get('/rps/statistics', [RPSController::class, 'statistics'], [AuthMiddleware::class]);
+
+// Pustaka (Learning References)
+$router->get('/rps/:id/pustaka', [SumberBelajarController::class, 'getPustakaByRPS'], [AuthMiddleware::class]);
+$router->get('/pustaka/:id', [SumberBelajarController::class, 'getPustaka'], [AuthMiddleware::class]);
+$router->post('/pustaka', [SumberBelajarController::class, 'createPustaka'], [AuthMiddleware::class]);
+$router->put('/pustaka/:id', [SumberBelajarController::class, 'updatePustaka'], [AuthMiddleware::class]);
+$router->delete('/pustaka/:id', [SumberBelajarController::class, 'deletePustaka'], [AuthMiddleware::class]);
+
+// Media Pembelajaran (Learning Media)
+$router->get('/rps/:id/media-pembelajaran', [SumberBelajarController::class, 'getMediaByRPS'], [AuthMiddleware::class]);
+$router->get('/media-pembelajaran/:id', [SumberBelajarController::class, 'getMedia'], [AuthMiddleware::class]);
+$router->post('/media-pembelajaran', [SumberBelajarController::class, 'createMedia'], [AuthMiddleware::class]);
+$router->put('/media-pembelajaran/:id', [SumberBelajarController::class, 'updateMedia'], [AuthMiddleware::class]);
+$router->delete('/media-pembelajaran/:id', [SumberBelajarController::class, 'deleteMedia'], [AuthMiddleware::class]);
+
+// Sumber Belajar Statistics
+$router->get('/rps/:id/sumber-belajar-stats', [SumberBelajarController::class, 'getStats'], [AuthMiddleware::class]);
+
+// RPS Export
+$router->get('/rps/:id/export/markdown', [RPSExportController::class, 'exportMarkdown'], [AuthMiddleware::class]);
+$router->get('/rps/:id/export/html', [RPSExportController::class, 'exportHTML'], [AuthMiddleware::class]);
+$router->get('/rps/:id/export/json', [RPSExportController::class, 'exportJSON'], [AuthMiddleware::class]);
+$router->get('/rps/:id/preview', [RPSExportController::class, 'preview'], [AuthMiddleware::class]);
+
+// ============================================
+// RENCANA PEMBELAJARAN MINGGUAN (Weekly Learning Plan)
+// ============================================
+
+$router->get('/rps/:id/rencana-mingguan', [RencanaMingguanController::class, 'getByRPS'], [AuthMiddleware::class]);
+$router->get('/rencana-mingguan/:id', [RencanaMingguanController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/rencana-mingguan', [RencanaMingguanController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/rencana-mingguan/:id', [RencanaMingguanController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/rencana-mingguan/:id', [RencanaMingguanController::class, 'delete'], [AuthMiddleware::class]);
+$router->post('/rps/:id/rencana-mingguan/bulk-create', [RencanaMingguanController::class, 'bulkCreate'], [AuthMiddleware::class]);
+$router->get('/rps/:id/rencana-mingguan/stats', [RencanaMingguanController::class, 'getStats'], [AuthMiddleware::class]);
+
+// ============================================
+// REALISASI PERTEMUAN & KEHADIRAN (Attendance)
+// ============================================
+
+// Realisasi Pertemuan
+$router->get('/kelas/:id/realisasi-pertemuan', [KehadiranController::class, 'getRealisasiByKelas'], [AuthMiddleware::class]);
+$router->get('/realisasi-pertemuan/:id', [KehadiranController::class, 'getRealisasiById'], [AuthMiddleware::class]);
+$router->post('/realisasi-pertemuan', [KehadiranController::class, 'createRealisasi'], [AuthMiddleware::class]);
+$router->put('/realisasi-pertemuan/:id', [KehadiranController::class, 'updateRealisasi'], [AuthMiddleware::class]);
+$router->delete('/realisasi-pertemuan/:id', [KehadiranController::class, 'deleteRealisasi'], [AuthMiddleware::class]);
+
+// Kehadiran
+$router->post('/realisasi-pertemuan/:id/kehadiran', [KehadiranController::class, 'inputKehadiran'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim/kehadiran/kelas/:id_kelas', [KehadiranController::class, 'getKehadiranByMahasiswa'], [AuthMiddleware::class]);
+$router->get('/kelas/:id/attendance-summary', [KehadiranController::class, 'getAttendanceSummary'], [AuthMiddleware::class]);
 
 // ============================================
 // CPMK MANAGEMENT (Capaian Pembelajaran Mata Kuliah)
@@ -350,6 +409,53 @@ $router->get('/analytics/kurikulum/:id/cpl-report', [AnalyticsController::class,
 
 // Student Performance
 $router->get('/analytics/mahasiswa/:nim/performance', [AnalyticsController::class, 'getMahasiswaPerformance'], [AuthMiddleware::class]);
+
+// ============================================
+// DOCUMENT MANAGEMENT
+// ============================================
+
+$router->get('/documents/:entity_type/:entity_id', [DocumentController::class, 'getByEntity'], [AuthMiddleware::class]);
+$router->get('/documents/:id', [DocumentController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/documents', [DocumentController::class, 'upload'], [AuthMiddleware::class]);
+$router->delete('/documents/:id', [DocumentController::class, 'delete'], [AuthMiddleware::class]);
+$router->get('/documents/stats/:entity_type/:entity_id', [DocumentController::class, 'getStats'], [AuthMiddleware::class]);
+
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+
+$router->get('/notifications', [NotificationController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'], [AuthMiddleware::class]);
+$router->post('/notifications/:id/read', [NotificationController::class, 'markAsRead'], [AuthMiddleware::class]);
+$router->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'], [AuthMiddleware::class]);
+$router->delete('/notifications/:id', [NotificationController::class, 'delete'], [AuthMiddleware::class]);
+
+// Admin-only notification endpoints
+$router->post('/notifications/create', [NotificationController::class, 'create'], [AuthMiddleware::class]);
+$router->post('/notifications/broadcast', [NotificationController::class, 'broadcast'], [AuthMiddleware::class]);
+$router->post('/notifications/notify-role', [NotificationController::class, 'notifyByRole'], [AuthMiddleware::class]);
+
+// ============================================
+// AMBANG BATAS (THRESHOLDS/PASSING GRADES)
+// ============================================
+
+$router->get('/rps/:id/ambang-batas', [AmbangBatasController::class, 'getByRPS'], [AuthMiddleware::class]);
+$router->get('/rps/:id/ambang-batas/summary', [AmbangBatasController::class, 'getSummary'], [AuthMiddleware::class]);
+$router->post('/ambang-batas', [AmbangBatasController::class, 'create'], [AuthMiddleware::class]);
+$router->get('/ambang-batas/:id', [AmbangBatasController::class, 'show'], [AuthMiddleware::class]);
+$router->put('/ambang-batas/:id', [AmbangBatasController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/ambang-batas/:id', [AmbangBatasController::class, 'delete'], [AuthMiddleware::class]);
+$router->post('/rps/:id/ambang-batas/bulk', [AmbangBatasController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// ============================================
+// AUDIT LOG & ACTIVITY TRACKING
+// ============================================
+
+$router->get('/audit-logs', [AuditLogController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/audit-logs/recent', [AuditLogController::class, 'getRecent'], [AuthMiddleware::class]);
+$router->get('/audit-logs/me', [AuditLogController::class, 'getMyLogs'], [AuthMiddleware::class]);
+$router->get('/audit-logs/user/:user_id', [AuditLogController::class, 'getByUser'], [AuthMiddleware::class]);
+$router->get('/audit-logs/:table/:record_id', [AuditLogController::class, 'getByRecord'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
