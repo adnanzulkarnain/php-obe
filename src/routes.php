@@ -20,6 +20,7 @@ use App\Controller\DosenController;
 use App\Controller\MahasiswaController;
 use App\Controller\FakultasController;
 use App\Controller\ProdiController;
+use App\Controller\PrasyaratMKController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -312,6 +313,27 @@ $router->get('/prodi/statistics/jenjang', [ProdiController::class, 'getStatistic
 // Prodi Related Data (already defined in other sections)
 // GET /prodi/:id/dosen - already defined in DOSEN section
 // GET /prodi/:id/mahasiswa - already defined in MAHASISWA section
+
+// ============================================
+// PRASYARAT MK (Course Prerequisites)
+// ============================================
+
+// Prerequisites Management
+$router->post('/prerequisites', [PrasyaratMKController::class, 'create'], [AuthMiddleware::class]);
+$router->delete('/prerequisites/:id', [PrasyaratMKController::class, 'delete'], [AuthMiddleware::class]);
+$router->post('/prerequisites/bulk', [PrasyaratMKController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// Query Prerequisites
+$router->get('/matakuliah/:kodeMk/prerequisites', [PrasyaratMKController::class, 'getPrerequisites'], [AuthMiddleware::class]);
+$router->get('/matakuliah/:kodeMk/required-by', [PrasyaratMKController::class, 'getCoursesRequiring'], [AuthMiddleware::class]);
+$router->get('/matakuliah/:kodeMk/prerequisite-tree', [PrasyaratMKController::class, 'getPrerequisiteTree'], [AuthMiddleware::class]);
+$router->delete('/matakuliah/:kodeMk/prerequisites/:kodeMkPrasyarat', [PrasyaratMKController::class, 'deleteByMataKuliah'], [AuthMiddleware::class]);
+
+// Enrollment Eligibility Check
+$router->get('/students/:nim/enrollment-eligibility/:kodeMk', [PrasyaratMKController::class, 'checkEnrollmentEligibility'], [AuthMiddleware::class]);
+
+// Statistics
+$router->get('/kurikulum/:id/prerequisite-statistics', [PrasyaratMKController::class, 'getStatistics'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
