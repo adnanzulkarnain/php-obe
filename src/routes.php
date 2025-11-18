@@ -12,6 +12,7 @@ use App\Controller\KurikulumController;
 use App\Controller\CPLController;
 use App\Controller\MataKuliahController;
 use App\Controller\KelasController;
+use App\Controller\EnrollmentController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -99,6 +100,28 @@ $router->delete('/kelas/:id/dosen/:id_dosen', [KelasController::class, 'removeDo
 // Dosen endpoints
 $router->get('/dosen/:id_dosen/kelas', [KelasController::class, 'getDosenKelas'], [AuthMiddleware::class]);
 $router->get('/dosen/:id_dosen/teaching-load', [KelasController::class, 'getTeachingLoadStats'], [AuthMiddleware::class]);
+
+// ============================================
+// ENROLLMENT MANAGEMENT (KRS)
+// ============================================
+
+// Enrollment CRUD
+$router->get('/enrollment/:id', [EnrollmentController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/enrollment', [EnrollmentController::class, 'enroll'], [AuthMiddleware::class]);
+$router->post('/enrollment/bulk', [EnrollmentController::class, 'bulkEnroll'], [AuthMiddleware::class]);
+$router->post('/enrollment/:id/drop', [EnrollmentController::class, 'drop'], [AuthMiddleware::class]);
+$router->put('/enrollment/:id/status', [EnrollmentController::class, 'updateStatus'], [AuthMiddleware::class]);
+$router->put('/enrollment/:id/grades', [EnrollmentController::class, 'updateGrades'], [AuthMiddleware::class]);
+
+// Mahasiswa endpoints
+$router->get('/mahasiswa/:nim/enrollment', [EnrollmentController::class, 'getByMahasiswa'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim/krs', [EnrollmentController::class, 'getKRS'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim/transcript', [EnrollmentController::class, 'getTranscript'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim/enrollment-capacity', [EnrollmentController::class, 'validateCapacity'], [AuthMiddleware::class]);
+
+// Kelas enrollment endpoints
+$router->get('/kelas/:id/enrollment', [EnrollmentController::class, 'getByKelas'], [AuthMiddleware::class]);
+$router->get('/kelas/:id/statistics', [EnrollmentController::class, 'getKelasStatistics'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
