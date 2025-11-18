@@ -18,6 +18,8 @@ use App\Controller\CPMKController;
 use App\Controller\PenilaianController;
 use App\Controller\DosenController;
 use App\Controller\MahasiswaController;
+use App\Controller\FakultasController;
+use App\Controller\ProdiController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -268,6 +270,48 @@ $router->get('/mahasiswa/academic-data', [MahasiswaController::class, 'getAcadem
 
 // User Account Management
 $router->post('/mahasiswa/:nim/create-user', [MahasiswaController::class, 'createUserAccount'], [AuthMiddleware::class]);
+
+// ============================================
+// FAKULTAS MANAGEMENT (Faculty/School Management)
+// ============================================
+
+// Fakultas CRUD
+$router->get('/fakultas', [FakultasController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/fakultas/:id', [FakultasController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/fakultas', [FakultasController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/fakultas/:id', [FakultasController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/fakultas/:id', [FakultasController::class, 'delete'], [AuthMiddleware::class]);
+
+// Fakultas Statistics
+$router->get('/fakultas/statistics', [FakultasController::class, 'getStatistics'], [AuthMiddleware::class]);
+
+// Fakultas Related Data (already defined in other sections)
+// GET /fakultas/:id/prodi - defined in PRODI section
+// GET /fakultas/:id/dosen - can be added if needed
+
+// ============================================
+// PRODI MANAGEMENT (Study Program Management)
+// ============================================
+
+// Prodi CRUD
+$router->get('/prodi', [ProdiController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/prodi/:id', [ProdiController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/prodi', [ProdiController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/prodi/:id', [ProdiController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/prodi/:id', [ProdiController::class, 'delete'], [AuthMiddleware::class]);
+
+// Prodi Queries
+$router->get('/prodi/jenjang/:jenjang', [ProdiController::class, 'getByJenjang'], [AuthMiddleware::class]);
+$router->get('/fakultas/:id/prodi', [ProdiController::class, 'getByFakultas'], [AuthMiddleware::class]);
+
+// Prodi Statistics
+$router->get('/prodi/statistics', [ProdiController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/prodi/statistics/fakultas', [ProdiController::class, 'getStatisticsByFakultas'], [AuthMiddleware::class]);
+$router->get('/prodi/statistics/jenjang', [ProdiController::class, 'getStatisticsByJenjang'], [AuthMiddleware::class]);
+
+// Prodi Related Data (already defined in other sections)
+// GET /prodi/:id/dosen - already defined in DOSEN section
+// GET /prodi/:id/mahasiswa - already defined in MAHASISWA section
 
 // ============================================
 // Health Check
