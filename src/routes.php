@@ -15,6 +15,7 @@ use App\Controller\KelasController;
 use App\Controller\EnrollmentController;
 use App\Controller\RPSController;
 use App\Controller\CPMKController;
+use App\Controller\PenilaianController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -179,6 +180,36 @@ $router->delete('/cpmk-cpl-mapping/:id', [CPMKController::class, 'deleteMapping'
 // Statistics & Validation
 $router->get('/rps/:id/cpmk-statistics', [CPMKController::class, 'getRPSStatistics'], [AuthMiddleware::class]);
 $router->get('/rps/:id/validate-cpmk', [CPMKController::class, 'validateRPSCompleteness'], [AuthMiddleware::class]);
+
+// ============================================
+// PENILAIAN SYSTEM (Grading System)
+// ============================================
+
+// Template Penilaian
+$router->get('/rps/:id/template-penilaian', [PenilaianController::class, 'getTemplatesByRPS'], [AuthMiddleware::class]);
+$router->post('/template-penilaian', [PenilaianController::class, 'createTemplate'], [AuthMiddleware::class]);
+$router->get('/rps/:id/validate-template', [PenilaianController::class, 'validateTemplateBobot'], [AuthMiddleware::class]);
+
+// Komponen Penilaian
+$router->get('/kelas/:id/komponen-penilaian', [PenilaianController::class, 'getKomponenByKelas'], [AuthMiddleware::class]);
+$router->post('/komponen-penilaian', [PenilaianController::class, 'createKomponen'], [AuthMiddleware::class]);
+$router->put('/komponen-penilaian/:id', [PenilaianController::class, 'updateKomponen'], [AuthMiddleware::class]);
+$router->delete('/komponen-penilaian/:id', [PenilaianController::class, 'deleteKomponen'], [AuthMiddleware::class]);
+
+// Nilai Input
+$router->post('/nilai', [PenilaianController::class, 'inputNilai'], [AuthMiddleware::class]);
+$router->post('/nilai/bulk', [PenilaianController::class, 'bulkInputNilai'], [AuthMiddleware::class]);
+$router->get('/enrollment/:id/nilai', [PenilaianController::class, 'getNilaiByEnrollment'], [AuthMiddleware::class]);
+$router->get('/komponen-penilaian/:id/nilai', [PenilaianController::class, 'getNilaiByKomponen'], [AuthMiddleware::class]);
+
+// Summary & Statistics
+$router->get('/kelas/:id/nilai-summary', [PenilaianController::class, 'getNilaiSummaryByKelas'], [AuthMiddleware::class]);
+$router->get('/komponen-penilaian/:id/statistics', [PenilaianController::class, 'getKomponenStatistics'], [AuthMiddleware::class]);
+$router->get('/enrollment/:id/cpmk-achievement/:id_cpmk', [PenilaianController::class, 'calculateCPMKAchievement'], [AuthMiddleware::class]);
+$router->post('/kelas/:id/recalculate-grades', [PenilaianController::class, 'recalculateKelasGrades'], [AuthMiddleware::class]);
+
+// Master Data
+$router->get('/jenis-penilaian', [PenilaianController::class, 'getAllJenisPenilaian'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
