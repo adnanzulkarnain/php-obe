@@ -18,7 +18,9 @@ use App\Controller\CPMKController;
 use App\Controller\PenilaianController;
 use App\Controller\DosenController;
 use App\Controller\MahasiswaController;
-use App\Controller\MasterDataController;
+use App\Controller\FakultasController;
+use App\Controller\ProdiController;
+use App\Controller\PrasyaratMKController;
 use App\Controller\AnalyticsController;
 use App\Middleware\AuthMiddleware;
 
@@ -37,39 +39,6 @@ $router->post('/auth/logout', [AuthController::class, 'logout']);
 // Profile
 $router->get('/auth/profile', [AuthController::class, 'profile'], [AuthMiddleware::class]);
 $router->post('/auth/change-password', [AuthController::class, 'changePassword'], [AuthMiddleware::class]);
-
-// ============================================
-// MASTER DATA MANAGEMENT
-// ============================================
-
-// Fakultas
-$router->get('/fakultas', [MasterDataController::class, 'getAllFakultas'], [AuthMiddleware::class]);
-$router->get('/fakultas/:id', [MasterDataController::class, 'getFakultas'], [AuthMiddleware::class]);
-$router->post('/fakultas', [MasterDataController::class, 'createFakultas'], [AuthMiddleware::class]);
-$router->put('/fakultas/:id', [MasterDataController::class, 'updateFakultas'], [AuthMiddleware::class]);
-
-// Prodi
-$router->get('/prodi', [MasterDataController::class, 'getAllProdi'], [AuthMiddleware::class]);
-$router->get('/prodi/:id', [MasterDataController::class, 'getProdi'], [AuthMiddleware::class]);
-$router->post('/prodi', [MasterDataController::class, 'createProdi'], [AuthMiddleware::class]);
-$router->put('/prodi/:id', [MasterDataController::class, 'updateProdi'], [AuthMiddleware::class]);
-$router->get('/prodi/:id_prodi/mahasiswa-statistics', [MahasiswaController::class, 'getStatisticsByProdi'], [AuthMiddleware::class]);
-
-// Dosen
-$router->get('/dosen', [DosenController::class, 'index'], [AuthMiddleware::class]);
-$router->get('/dosen/:id', [DosenController::class, 'show'], [AuthMiddleware::class]);
-$router->post('/dosen', [DosenController::class, 'create'], [AuthMiddleware::class]);
-$router->put('/dosen/:id', [DosenController::class, 'update'], [AuthMiddleware::class]);
-$router->delete('/dosen/:id', [DosenController::class, 'delete'], [AuthMiddleware::class]);
-$router->get('/dosen/:id/teaching-assignments', [DosenController::class, 'getTeachingAssignments'], [AuthMiddleware::class]);
-
-// Mahasiswa
-$router->get('/mahasiswa', [MahasiswaController::class, 'index'], [AuthMiddleware::class]);
-$router->get('/mahasiswa/:nim', [MahasiswaController::class, 'show'], [AuthMiddleware::class]);
-$router->post('/mahasiswa', [MahasiswaController::class, 'create'], [AuthMiddleware::class]);
-$router->put('/mahasiswa/:nim', [MahasiswaController::class, 'update'], [AuthMiddleware::class]);
-$router->delete('/mahasiswa/:nim', [MahasiswaController::class, 'delete'], [AuthMiddleware::class]);
-$router->get('/mahasiswa/angkatan/:angkatan', [MahasiswaController::class, 'getByAngkatan'], [AuthMiddleware::class]);
 
 // ============================================
 // KURIKULUM MANAGEMENT
@@ -248,13 +217,124 @@ $router->post('/kelas/:id/recalculate-grades', [PenilaianController::class, 'rec
 // Master Data
 $router->get('/jenis-penilaian', [PenilaianController::class, 'getAllJenisPenilaian'], [AuthMiddleware::class]);
 
-// Ketercapaian CPMK & CPL
-$router->get('/enrollment/:id/ketercapaian-cpmk', [PenilaianController::class, 'getKetercapaianCPMK'], [AuthMiddleware::class]);
-$router->get('/enrollment/:id/ketercapaian-cpl', [PenilaianController::class, 'getKetercapaianCPL'], [AuthMiddleware::class]);
+// ============================================
+// DOSEN MANAGEMENT (Lecturer/Faculty Management)
+// ============================================
 
-// Finalisasi Nilai
-$router->post('/enrollment/:id/finalize-grades', [PenilaianController::class, 'finalizeGrades'], [AuthMiddleware::class]);
-$router->post('/kelas/:id/finalize-grades', [PenilaianController::class, 'finalizeKelasGrades'], [AuthMiddleware::class]);
+// Dosen CRUD
+$router->get('/dosen', [DosenController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/dosen/:id', [DosenController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/dosen', [DosenController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/dosen/:id', [DosenController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/dosen/:id', [DosenController::class, 'delete'], [AuthMiddleware::class]);
+
+// Dosen Status Management
+$router->post('/dosen/:id/change-status', [DosenController::class, 'changeStatus'], [AuthMiddleware::class]);
+
+// Dosen Queries
+$router->get('/dosen/nidn/:nidn', [DosenController::class, 'getByNidn'], [AuthMiddleware::class]);
+$router->get('/dosen/status/:status', [DosenController::class, 'getByStatus'], [AuthMiddleware::class]);
+$router->get('/prodi/:id/dosen', [DosenController::class, 'getByProdi'], [AuthMiddleware::class]);
+
+// Dosen Statistics & Reports
+$router->get('/dosen/statistics', [DosenController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/dosen/teaching-load', [DosenController::class, 'getTeachingLoad'], [AuthMiddleware::class]);
+
+// User Account Management
+$router->post('/dosen/:id/create-user', [DosenController::class, 'createUserAccount'], [AuthMiddleware::class]);
+
+// ============================================
+// MAHASISWA MANAGEMENT (Student Management)
+// ============================================
+
+// Mahasiswa CRUD
+$router->get('/mahasiswa', [MahasiswaController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim', [MahasiswaController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/mahasiswa', [MahasiswaController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/mahasiswa/:nim', [MahasiswaController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/mahasiswa/:nim', [MahasiswaController::class, 'delete'], [AuthMiddleware::class]);
+
+// Mahasiswa Bulk Operations
+$router->post('/mahasiswa/bulk', [MahasiswaController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// Mahasiswa Status Management
+$router->post('/mahasiswa/:nim/change-status', [MahasiswaController::class, 'changeStatus'], [AuthMiddleware::class]);
+
+// Mahasiswa Queries
+$router->get('/mahasiswa/angkatan/:angkatan', [MahasiswaController::class, 'getByAngkatan'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/status/:status', [MahasiswaController::class, 'getByStatus'], [AuthMiddleware::class]);
+$router->get('/prodi/:id/mahasiswa', [MahasiswaController::class, 'getByProdi'], [AuthMiddleware::class]);
+$router->get('/kurikulum/:id/mahasiswa', [MahasiswaController::class, 'getByKurikulum'], [AuthMiddleware::class]);
+
+// Mahasiswa Statistics & Reports
+$router->get('/mahasiswa/statistics', [MahasiswaController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/academic-data', [MahasiswaController::class, 'getAcademicData'], [AuthMiddleware::class]);
+
+// User Account Management
+$router->post('/mahasiswa/:nim/create-user', [MahasiswaController::class, 'createUserAccount'], [AuthMiddleware::class]);
+
+// ============================================
+// FAKULTAS MANAGEMENT (Faculty/School Management)
+// ============================================
+
+// Fakultas CRUD
+$router->get('/fakultas', [FakultasController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/fakultas/:id', [FakultasController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/fakultas', [FakultasController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/fakultas/:id', [FakultasController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/fakultas/:id', [FakultasController::class, 'delete'], [AuthMiddleware::class]);
+
+// Fakultas Statistics
+$router->get('/fakultas/statistics', [FakultasController::class, 'getStatistics'], [AuthMiddleware::class]);
+
+// Fakultas Related Data (already defined in other sections)
+// GET /fakultas/:id/prodi - defined in PRODI section
+// GET /fakultas/:id/dosen - can be added if needed
+
+// ============================================
+// PRODI MANAGEMENT (Study Program Management)
+// ============================================
+
+// Prodi CRUD
+$router->get('/prodi', [ProdiController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/prodi/:id', [ProdiController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/prodi', [ProdiController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/prodi/:id', [ProdiController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/prodi/:id', [ProdiController::class, 'delete'], [AuthMiddleware::class]);
+
+// Prodi Queries
+$router->get('/prodi/jenjang/:jenjang', [ProdiController::class, 'getByJenjang'], [AuthMiddleware::class]);
+$router->get('/fakultas/:id/prodi', [ProdiController::class, 'getByFakultas'], [AuthMiddleware::class]);
+
+// Prodi Statistics
+$router->get('/prodi/statistics', [ProdiController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/prodi/statistics/fakultas', [ProdiController::class, 'getStatisticsByFakultas'], [AuthMiddleware::class]);
+$router->get('/prodi/statistics/jenjang', [ProdiController::class, 'getStatisticsByJenjang'], [AuthMiddleware::class]);
+
+// Prodi Related Data (already defined in other sections)
+// GET /prodi/:id/dosen - already defined in DOSEN section
+// GET /prodi/:id/mahasiswa - already defined in MAHASISWA section
+
+// ============================================
+// PRASYARAT MK (Course Prerequisites)
+// ============================================
+
+// Prerequisites Management
+$router->post('/prerequisites', [PrasyaratMKController::class, 'create'], [AuthMiddleware::class]);
+$router->delete('/prerequisites/:id', [PrasyaratMKController::class, 'delete'], [AuthMiddleware::class]);
+$router->post('/prerequisites/bulk', [PrasyaratMKController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// Query Prerequisites
+$router->get('/matakuliah/:kodeMk/prerequisites', [PrasyaratMKController::class, 'getPrerequisites'], [AuthMiddleware::class]);
+$router->get('/matakuliah/:kodeMk/required-by', [PrasyaratMKController::class, 'getCoursesRequiring'], [AuthMiddleware::class]);
+$router->get('/matakuliah/:kodeMk/prerequisite-tree', [PrasyaratMKController::class, 'getPrerequisiteTree'], [AuthMiddleware::class]);
+$router->delete('/matakuliah/:kodeMk/prerequisites/:kodeMkPrasyarat', [PrasyaratMKController::class, 'deleteByMataKuliah'], [AuthMiddleware::class]);
+
+// Enrollment Eligibility Check
+$router->get('/students/:nim/enrollment-eligibility/:kodeMk', [PrasyaratMKController::class, 'checkEnrollmentEligibility'], [AuthMiddleware::class]);
+
+// Statistics
+$router->get('/kurikulum/:id/prerequisite-statistics', [PrasyaratMKController::class, 'getStatistics'], [AuthMiddleware::class]);
 
 // ============================================
 // ANALYTICS & REPORTING

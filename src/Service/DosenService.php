@@ -5,179 +5,308 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\DosenRepository;
+use App\Repository\UserRepository;
+use App\Service\AuditLogService;
+use App\Entity\Dosen;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Dosen Service
- * Business logic for lecturer management
+ * Business logic for dosen (lecturer/faculty) management
  */
 class DosenService
 {
-    private DosenRepository $repository;
+    private DosenRepository $dosenRepo;
+    private UserRepository $userRepo;
     private AuditLogService $auditLog;
 
-    public function __construct()
-    {
-        $this->repository = new DosenRepository();
-        $this->auditLog = new AuditLogService();
+    public function __construct(
+        DosenRepository $dosenRepo,
+        UserRepository $userRepo,
+        AuditLogService $auditLog
+    ) {
+        $this->dosenRepo = $dosenRepo;
+        $this->userRepo = $userRepo;
+        $this->auditLog = $auditLog;
     }
 
     /**
-     * Get all dosen with optional filters
+     * Create a new dosen
      */
-    public function getAll(array $filters = []): array
+    public function create(array $data, int $userId): int
     {
-        return $this->repository->getAll($filters);
-    }
-
-    /**
-     * Get dosen by ID
-     */
-    public function getById(string $idDosen): array
-    {
-        $dosen = $this->repository->findWithDetails($idDosen);
-
-        if (!$dosen) {
-            throw new \Exception('Dosen tidak ditemukan', 404);
+        // Validate unique constraints
+        if (!empty($data['nidn']) && $this->dosenRepo->nidnExists($data['nidn'])) {
+            throw new InvalidArgumentException('NIDN already exists');
         }
 
-        return $dosen;
+        if ($this->dosenRepo->emailExists($data['email'])) {
+            throw new InvalidArgumentException('Email already exists');
+        }
+
+        // Validate entity
+        $dosen = new Dosen($data);
+
+        // Insert into database
+        $idDosen = $this->dosenRepo->create($dosen->toArray());
+
+        // Log audit
+        $this->auditLog->log(
+            'dosen',
+            $idDosen,
+            'create',
+            null,
+            $dosen->toArray(),
+            $userId
+        );
+
+        return $idDosen;
     }
 
     /**
-     * Create new dosen
+     * Update an existing dosen
      */
-    public function create(array $data, int $userId): array
+    public function update(string $idDosen, array $data, int $userId): bool
     {
-        // Validate required fields
-        $required = ['id_dosen', 'nama', 'email'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                throw new \Exception("Field {$field} wajib diisi", 400);
+        // Get existing dosen
+        $existing = $this->dosenRepo->findById($idDosen);
+        if (!$existing) {
+            throw new InvalidArgumentException('Dosen not found');
+        }
+
+        // Validate unique constraints (excluding current dosen)
+        if (!empty($data['nidn']) && $this->dosenRepo->nidnExists($data['nidn'], $idDosen)) {
+            throw new InvalidArgumentException('NIDN already exists');
+        }
+
+        if (isset($data['email']) && $this->dosenRepo->emailExists($data['email'], $idDosen)) {
+            throw new InvalidArgumentException('Email already exists');
+        }
+
+        // Merge with existing data
+        $updateData = array_merge($existing, $data);
+        $updateData['id_dosen'] = $idDosen;
+
+        // Validate entity
+        $dosen = new Dosen($updateData);
+
+        // Update in database
+        $success = $this->dosenRepo->update($idDosen, $dosen->toArray());
+
+        if ($success) {
+            // Log audit
+            $this->auditLog->log(
+                'dosen',
+                $idDosen,
+                'update',
+                $existing,
+                $dosen->toArray(),
+                $userId
+            );
+        }
+
+        return $success;
+    }
+
+    /**
+     * Change dosen status
+     */
+    public function changeStatus(string $idDosen, string $newStatus, int $userId): bool
+    {
+        // Get existing dosen
+        $existing = $this->dosenRepo->findById($idDosen);
+        if (!$existing) {
+            throw new InvalidArgumentException('Dosen not found');
+        }
+
+        // Validate status
+        if (!in_array($newStatus, Dosen::getValidStatus())) {
+            throw new InvalidArgumentException('Invalid status');
+        }
+
+        // Check if status is actually changing
+        if ($existing['status'] === $newStatus) {
+            return true; // No change needed
+        }
+
+        // Business rule: Cannot reactivate a retired dosen
+        if ($existing['status'] === 'pensiun' && $newStatus === 'aktif') {
+            throw new RuntimeException('Cannot reactivate a retired dosen');
+        }
+
+        // Update status
+        $success = $this->dosenRepo->update($idDosen, ['status' => $newStatus]);
+
+        if ($success) {
+            // Log audit
+            $this->auditLog->log(
+                'dosen',
+                $idDosen,
+                'status_change',
+                ['status' => $existing['status']],
+                ['status' => $newStatus],
+                $userId
+            );
+        }
+
+        return $success;
+    }
+
+    /**
+     * Delete a dosen
+     */
+    public function delete(string $idDosen, int $userId): bool
+    {
+        // Get existing dosen
+        $existing = $this->dosenRepo->findById($idDosen);
+        if (!$existing) {
+            throw new InvalidArgumentException('Dosen not found');
+        }
+
+        // Business rule: Cannot delete dosen with active teaching assignments
+        // This will be enforced by database foreign key constraints
+        // If violation occurs, catch and throw user-friendly message
+
+        try {
+            $success = $this->dosenRepo->delete($idDosen);
+
+            if ($success) {
+                // Log audit
+                $this->auditLog->log(
+                    'dosen',
+                    $idDosen,
+                    'delete',
+                    $existing,
+                    null,
+                    $userId
+                );
             }
+
+            return $success;
+        } catch (\Exception $e) {
+            if (strpos($e->getMessage(), 'foreign key') !== false) {
+                throw new RuntimeException(
+                    'Cannot delete dosen with existing teaching assignments or related data'
+                );
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Get dosen by ID with details
+     */
+    public function getById(string $idDosen): ?array
+    {
+        return $this->dosenRepo->findByIdWithDetails($idDosen);
+    }
+
+    /**
+     * Get dosen by NIDN
+     */
+    public function getByNidn(string $nidn): ?array
+    {
+        return $this->dosenRepo->findByNidn($nidn);
+    }
+
+    /**
+     * Get all dosen with filters
+     */
+    public function getAll(?array $filters = []): array
+    {
+        return $this->dosenRepo->getAllWithDetails($filters);
+    }
+
+    /**
+     * Get dosen by prodi
+     */
+    public function getByProdi(string $idProdi, ?array $filters = []): array
+    {
+        return $this->dosenRepo->findByProdi($idProdi, $filters);
+    }
+
+    /**
+     * Get dosen by status
+     */
+    public function getByStatus(string $status): array
+    {
+        return $this->dosenRepo->findByStatus($status);
+    }
+
+    /**
+     * Search dosen
+     */
+    public function search(string $keyword, ?array $filters = []): array
+    {
+        if (strlen($keyword) < 2) {
+            throw new InvalidArgumentException('Search keyword must be at least 2 characters');
         }
 
-        // Check if ID already exists
-        if ($this->repository->exists($data['id_dosen'])) {
-            throw new \Exception('ID Dosen sudah digunakan', 400);
+        return $this->dosenRepo->search($keyword, $filters);
+    }
+
+    /**
+     * Get dosen statistics
+     */
+    public function getStatistics(): array
+    {
+        return [
+            'by_status' => $this->dosenRepo->getStatisticsByStatus(),
+            'by_prodi' => $this->dosenRepo->getStatisticsByProdi(),
+        ];
+    }
+
+    /**
+     * Get dosen with teaching load
+     */
+    public function getDosenWithTeachingLoad(?string $tahunAjaran = null, ?string $semester = null): array
+    {
+        return $this->dosenRepo->getDosenWithTeachingLoad($tahunAjaran, $semester);
+    }
+
+    /**
+     * Create user account for dosen
+     */
+    public function createUserAccount(string $idDosen, array $userData, int $createdBy): int
+    {
+        // Get dosen info
+        $dosen = $this->dosenRepo->findById($idDosen);
+        if (!$dosen) {
+            throw new InvalidArgumentException('Dosen not found');
         }
 
-        // Check if NIDN already exists
-        if (!empty($data['nidn']) && $this->repository->nidnExists($data['nidn'])) {
-            throw new \Exception('NIDN sudah terdaftar', 400);
-        }
-
-        // Check if email already exists
-        if ($this->repository->emailExists($data['email'])) {
-            throw new \Exception('Email sudah terdaftar', 400);
-        }
-
-        // Validate email format
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            throw new \Exception('Format email tidak valid', 400);
-        }
-
-        // Prepare data
-        $dosenData = [
-            'id_dosen' => $data['id_dosen'],
-            'nidn' => $data['nidn'] ?? null,
-            'nama' => $data['nama'],
-            'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
-            'id_prodi' => $data['id_prodi'] ?? null,
-            'status' => $data['status'] ?? 'aktif'
+        // Prepare user data
+        $userCreateData = [
+            'username' => $userData['username'] ?? $idDosen,
+            'email' => $dosen['email'],
+            'password' => $userData['password'],
+            'user_type' => 'dosen',
+            'ref_id' => $idDosen,
         ];
 
-        // Create dosen
-        $idDosen = $this->repository->createDosen($dosenData);
-
-        // Audit log
-        $this->auditLog->log('dosen', $idDosen, 'INSERT', null, $dosenData, $userId);
-
-        return $this->repository->findWithDetails($idDosen);
-    }
-
-    /**
-     * Update dosen
-     */
-    public function update(string $idDosen, array $data, int $userId): array
-    {
-        // Check if dosen exists
-        $existing = $this->repository->find($idDosen);
-        if (!$existing) {
-            throw new \Exception('Dosen tidak ditemukan', 404);
+        // Check if user already exists
+        $existingUser = $this->userRepo->findOne(['ref_id' => $idDosen, 'user_type' => 'dosen']);
+        if ($existingUser) {
+            throw new RuntimeException('User account already exists for this dosen');
         }
 
-        // Check NIDN uniqueness
-        if (!empty($data['nidn']) && $this->repository->nidnExists($data['nidn'], $idDosen)) {
-            throw new \Exception('NIDN sudah terdaftar oleh dosen lain', 400);
-        }
+        // Create user account
+        $idUser = $this->userRepo->create($userCreateData);
 
-        // Check email uniqueness
-        if (!empty($data['email']) && $this->repository->emailExists($data['email'], $idDosen)) {
-            throw new \Exception('Email sudah terdaftar oleh dosen lain', 400);
-        }
+        // Assign role (default: dosen role)
+        $this->userRepo->assignRole($idUser, 'dosen');
 
-        // Validate email format
-        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            throw new \Exception('Format email tidak valid', 400);
-        }
+        // Log audit
+        $this->auditLog->log(
+            'dosen',
+            $idDosen,
+            'user_account_created',
+            null,
+            ['id_user' => $idUser, 'username' => $userCreateData['username']],
+            $createdBy
+        );
 
-        // Prepare update data
-        $updateData = [];
-        $allowedFields = ['nidn', 'nama', 'email', 'phone', 'id_prodi', 'status'];
-
-        foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
-            }
-        }
-
-        if (empty($updateData)) {
-            throw new \Exception('Tidak ada data yang diupdate', 400);
-        }
-
-        // Update dosen
-        $this->repository->updateDosen($idDosen, $updateData);
-
-        // Audit log
-        $this->auditLog->log('dosen', $idDosen, 'UPDATE', $existing, $updateData, $userId);
-
-        return $this->repository->findWithDetails($idDosen);
-    }
-
-    /**
-     * Delete dosen (soft delete by changing status)
-     */
-    public function delete(string $idDosen, int $userId): void
-    {
-        // Check if dosen exists
-        $dosen = $this->repository->find($idDosen);
-        if (!$dosen) {
-            throw new \Exception('Dosen tidak ditemukan', 404);
-        }
-
-        // Check if dosen has active teaching assignments
-        $teachings = $this->repository->getTeachingAssignments($idDosen);
-        $activeTeachings = array_filter($teachings, function ($t) {
-            return $t['tahun_ajaran'] >= date('Y');
-        });
-
-        if (count($activeTeachings) > 0) {
-            throw new \Exception('Dosen tidak dapat dihapus karena masih mengampu kelas aktif', 400);
-        }
-
-        // Soft delete by setting status to non-active
-        $this->repository->updateDosen($idDosen, ['status' => 'pensiun']);
-
-        // Audit log
-        $this->auditLog->log('dosen', $idDosen, 'DELETE', $dosen, null, $userId);
-    }
-
-    /**
-     * Get teaching assignments
-     */
-    public function getTeachingAssignments(string $idDosen): array
-    {
-        return $this->repository->getTeachingAssignments($idDosen);
+        return $idUser;
     }
 }

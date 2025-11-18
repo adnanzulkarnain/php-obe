@@ -8,6 +8,7 @@ use App\Core\BaseRepository;
 
 /**
  * Fakultas Repository
+ * Handles database operations for fakultas entity
  */
 class FakultasRepository extends BaseRepository
 {
@@ -17,15 +18,15 @@ class FakultasRepository extends BaseRepository
     /**
      * Get all fakultas with prodi count
      */
-    public function getAll(): array
+    public function getAllWithProdiCount(): array
     {
         $sql = "
             SELECT
                 f.*,
-                COUNT(DISTINCT p.id_prodi) as jumlah_prodi
-            FROM fakultas f
+                COUNT(p.id_prodi) as jumlah_prodi
+            FROM {$this->table} f
             LEFT JOIN prodi p ON f.id_fakultas = p.id_fakultas
-            GROUP BY f.id_fakultas
+            GROUP BY f.id_fakultas, f.nama, f.created_at, f.updated_at
             ORDER BY f.nama ASC
         ";
 
@@ -33,62 +34,63 @@ class FakultasRepository extends BaseRepository
     }
 
     /**
-     * Find fakultas by ID with details
+     * Get fakultas by ID with details
      */
-    public function findWithDetails(string $idFakultas): ?array
+    public function findByIdWithDetails(string $idFakultas): ?array
     {
         $sql = "
             SELECT
                 f.*,
-                COUNT(DISTINCT p.id_prodi) as jumlah_prodi
-            FROM fakultas f
+                COUNT(p.id_prodi) as jumlah_prodi,
+                COUNT(DISTINCT d.id_dosen) as jumlah_dosen,
+                COUNT(DISTINCT m.nim) as jumlah_mahasiswa
+            FROM {$this->table} f
             LEFT JOIN prodi p ON f.id_fakultas = p.id_fakultas
+            LEFT JOIN dosen d ON p.id_prodi = d.id_prodi
+            LEFT JOIN mahasiswa m ON p.id_prodi = m.id_prodi
             WHERE f.id_fakultas = :id_fakultas
-            GROUP BY f.id_fakultas
+            GROUP BY f.id_fakultas, f.nama, f.created_at, f.updated_at
         ";
 
         return $this->queryOne($sql, ['id_fakultas' => $idFakultas]);
     }
 
     /**
-     * Check if fakultas exists
+     * Search fakultas by name
      */
-    public function exists(string $idFakultas): bool
-    {
-        $result = $this->queryOne(
-            "SELECT COUNT(*) as count FROM fakultas WHERE id_fakultas = :id_fakultas",
-            ['id_fakultas' => $idFakultas]
-        );
-
-        return $result['count'] > 0;
-    }
-
-    /**
-     * Create fakultas
-     */
-    public function createFakultas(array $data): string
+    public function search(string $keyword): array
     {
         $sql = "
-            INSERT INTO fakultas (id_fakultas, nama, created_at, updated_at)
-            VALUES (:id_fakultas, :nama, NOW(), NOW())
-            RETURNING id_fakultas
+            SELECT
+                f.*,
+                COUNT(p.id_prodi) as jumlah_prodi
+            FROM {$this->table} f
+            LEFT JOIN prodi p ON f.id_fakultas = p.id_fakultas
+            WHERE f.nama ILIKE :keyword
+            GROUP BY f.id_fakultas, f.nama, f.created_at, f.updated_at
+            ORDER BY f.nama ASC
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($data);
-
-        return $stmt->fetch(\PDO::FETCH_ASSOC)['id_fakultas'];
+        return $this->query($sql, ['keyword' => "%{$keyword}%"]);
     }
 
     /**
-     * Update fakultas
+     * Get fakultas statistics
      */
-    public function updateFakultas(string $idFakultas, array $data): bool
+    public function getStatistics(): array
     {
-        $sql = "UPDATE fakultas SET nama = :nama, updated_at = NOW() WHERE id_fakultas = :id_fakultas";
-        $data['id_fakultas'] = $idFakultas;
+        $sql = "
+            SELECT
+                COUNT(DISTINCT f.id_fakultas) as total_fakultas,
+                COUNT(DISTINCT p.id_prodi) as total_prodi,
+                COUNT(DISTINCT d.id_dosen) as total_dosen,
+                COUNT(DISTINCT m.nim) as total_mahasiswa
+            FROM {$this->table} f
+            LEFT JOIN prodi p ON f.id_fakultas = p.id_fakultas
+            LEFT JOIN dosen d ON p.id_prodi = d.id_prodi
+            LEFT JOIN mahasiswa m ON p.id_prodi = m.id_prodi
+        ";
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute($data);
+        return $this->queryOne($sql) ?: [];
     }
 }
