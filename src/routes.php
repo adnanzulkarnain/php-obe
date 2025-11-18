@@ -16,6 +16,8 @@ use App\Controller\EnrollmentController;
 use App\Controller\RPSController;
 use App\Controller\CPMKController;
 use App\Controller\PenilaianController;
+use App\Controller\DosenController;
+use App\Controller\MahasiswaController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -210,6 +212,62 @@ $router->post('/kelas/:id/recalculate-grades', [PenilaianController::class, 'rec
 
 // Master Data
 $router->get('/jenis-penilaian', [PenilaianController::class, 'getAllJenisPenilaian'], [AuthMiddleware::class]);
+
+// ============================================
+// DOSEN MANAGEMENT (Lecturer/Faculty Management)
+// ============================================
+
+// Dosen CRUD
+$router->get('/dosen', [DosenController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/dosen/:id', [DosenController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/dosen', [DosenController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/dosen/:id', [DosenController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/dosen/:id', [DosenController::class, 'delete'], [AuthMiddleware::class]);
+
+// Dosen Status Management
+$router->post('/dosen/:id/change-status', [DosenController::class, 'changeStatus'], [AuthMiddleware::class]);
+
+// Dosen Queries
+$router->get('/dosen/nidn/:nidn', [DosenController::class, 'getByNidn'], [AuthMiddleware::class]);
+$router->get('/dosen/status/:status', [DosenController::class, 'getByStatus'], [AuthMiddleware::class]);
+$router->get('/prodi/:id/dosen', [DosenController::class, 'getByProdi'], [AuthMiddleware::class]);
+
+// Dosen Statistics & Reports
+$router->get('/dosen/statistics', [DosenController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/dosen/teaching-load', [DosenController::class, 'getTeachingLoad'], [AuthMiddleware::class]);
+
+// User Account Management
+$router->post('/dosen/:id/create-user', [DosenController::class, 'createUserAccount'], [AuthMiddleware::class]);
+
+// ============================================
+// MAHASISWA MANAGEMENT (Student Management)
+// ============================================
+
+// Mahasiswa CRUD
+$router->get('/mahasiswa', [MahasiswaController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/:nim', [MahasiswaController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/mahasiswa', [MahasiswaController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/mahasiswa/:nim', [MahasiswaController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/mahasiswa/:nim', [MahasiswaController::class, 'delete'], [AuthMiddleware::class]);
+
+// Mahasiswa Bulk Operations
+$router->post('/mahasiswa/bulk', [MahasiswaController::class, 'bulkCreate'], [AuthMiddleware::class]);
+
+// Mahasiswa Status Management
+$router->post('/mahasiswa/:nim/change-status', [MahasiswaController::class, 'changeStatus'], [AuthMiddleware::class]);
+
+// Mahasiswa Queries
+$router->get('/mahasiswa/angkatan/:angkatan', [MahasiswaController::class, 'getByAngkatan'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/status/:status', [MahasiswaController::class, 'getByStatus'], [AuthMiddleware::class]);
+$router->get('/prodi/:id/mahasiswa', [MahasiswaController::class, 'getByProdi'], [AuthMiddleware::class]);
+$router->get('/kurikulum/:id/mahasiswa', [MahasiswaController::class, 'getByKurikulum'], [AuthMiddleware::class]);
+
+// Mahasiswa Statistics & Reports
+$router->get('/mahasiswa/statistics', [MahasiswaController::class, 'getStatistics'], [AuthMiddleware::class]);
+$router->get('/mahasiswa/academic-data', [MahasiswaController::class, 'getAcademicData'], [AuthMiddleware::class]);
+
+// User Account Management
+$router->post('/mahasiswa/:nim/create-user', [MahasiswaController::class, 'createUserAccount'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
