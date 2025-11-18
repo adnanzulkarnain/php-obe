@@ -11,6 +11,7 @@ use App\Controller\AuthController;
 use App\Controller\KurikulumController;
 use App\Controller\CPLController;
 use App\Controller\MataKuliahController;
+use App\Controller\KelasController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -69,6 +70,35 @@ $router->get('/matakuliah', [MataKuliahController::class, 'index'], [AuthMiddlew
 $router->post('/matakuliah', [MataKuliahController::class, 'create'], [AuthMiddleware::class]);
 $router->put('/matakuliah/:kode_mk/:id_kurikulum', [MataKuliahController::class, 'update'], [AuthMiddleware::class]);
 $router->delete('/matakuliah/:kode_mk/:id_kurikulum', [MataKuliahController::class, 'delete'], [AuthMiddleware::class]);
+
+// ============================================
+// KELAS MANAGEMENT
+// ============================================
+
+// Get kelas list and detail
+$router->get('/kelas', [KelasController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/kelas/:id', [KelasController::class, 'show'], [AuthMiddleware::class]);
+
+// Create, update, delete kelas
+$router->post('/kelas', [KelasController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/kelas/:id', [KelasController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/kelas/:id', [KelasController::class, 'delete'], [AuthMiddleware::class]);
+
+// Change kelas status
+$router->post('/kelas/:id/status', [KelasController::class, 'changeStatus'], [AuthMiddleware::class]);
+
+// Get statistics
+$router->get('/kelas/statistics', [KelasController::class, 'statistics'], [AuthMiddleware::class]);
+
+// Teaching assignments
+$router->get('/kelas/:id/dosen', [KelasController::class, 'getTeachingAssignments'], [AuthMiddleware::class]);
+$router->post('/kelas/:id/dosen', [KelasController::class, 'assignDosen'], [AuthMiddleware::class]);
+$router->put('/kelas/:id/dosen/:id_dosen', [KelasController::class, 'updateDosenPeran'], [AuthMiddleware::class]);
+$router->delete('/kelas/:id/dosen/:id_dosen', [KelasController::class, 'removeDosen'], [AuthMiddleware::class]);
+
+// Dosen endpoints
+$router->get('/dosen/:id_dosen/kelas', [KelasController::class, 'getDosenKelas'], [AuthMiddleware::class]);
+$router->get('/dosen/:id_dosen/teaching-load', [KelasController::class, 'getTeachingLoadStats'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
