@@ -21,6 +21,7 @@ use App\Controller\MahasiswaController;
 use App\Controller\FakultasController;
 use App\Controller\ProdiController;
 use App\Controller\PrasyaratMKController;
+use App\Controller\AnalyticsController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -334,6 +335,21 @@ $router->get('/students/:nim/enrollment-eligibility/:kodeMk', [PrasyaratMKContro
 
 // Statistics
 $router->get('/kurikulum/:id/prerequisite-statistics', [PrasyaratMKController::class, 'getStatistics'], [AuthMiddleware::class]);
+
+// ============================================
+// ANALYTICS & REPORTING
+// ============================================
+
+// Dashboard
+$router->get('/analytics/dashboard', [AnalyticsController::class, 'getDashboard'], [AuthMiddleware::class]);
+$router->get('/analytics/trends', [AnalyticsController::class, 'getTrends'], [AuthMiddleware::class]);
+
+// CPMK & CPL Reports
+$router->get('/analytics/kelas/:id/cpmk-report', [AnalyticsController::class, 'getCPMKReportByKelas'], [AuthMiddleware::class]);
+$router->get('/analytics/kurikulum/:id/cpl-report', [AnalyticsController::class, 'getCPLReportByKurikulum'], [AuthMiddleware::class]);
+
+// Student Performance
+$router->get('/analytics/mahasiswa/:nim/performance', [AnalyticsController::class, 'getMahasiswaPerformance'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check

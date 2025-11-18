@@ -349,4 +349,72 @@ class PenilaianController
             Response::error($e->getMessage(), $e->getCode() ?: 400);
         }
     }
+
+    // ===================================
+    // KETERCAPAIAN CPMK & CPL ENDPOINTS
+    // ===================================
+
+    /**
+     * Get ketercapaian CPMK by enrollment
+     * GET /api/enrollment/:id/ketercapaian-cpmk
+     */
+    public function getKetercapaianCPMK(string $idEnrollment): void
+    {
+        try {
+            $achievements = $this->service->getKetercapaianCPMK((int)$idEnrollment);
+            Response::success($achievements);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+    }
+
+    /**
+     * Get ketercapaian CPL by enrollment
+     * GET /api/enrollment/:id/ketercapaian-cpl
+     */
+    public function getKetercapaianCPL(string $idEnrollment): void
+    {
+        try {
+            $achievements = $this->service->getKetercapaianCPL((int)$idEnrollment);
+            Response::success($achievements);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+    }
+
+    /**
+     * Finalize grades for enrollment
+     * POST /api/enrollment/:id/finalize-grades
+     */
+    public function finalizeGrades(string $idEnrollment): void
+    {
+        try {
+            AuthMiddleware::requireRole('dosen', 'kaprodi', 'admin');
+
+            $user = AuthMiddleware::user();
+            $result = $this->service->finalizeGrades((int)$idEnrollment, $user['id_user']);
+
+            Response::success($result, 'Nilai berhasil difinalisasi');
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+    }
+
+    /**
+     * Finalize grades for entire kelas
+     * POST /api/kelas/:id/finalize-grades
+     */
+    public function finalizeKelasGrades(string $idKelas): void
+    {
+        try {
+            AuthMiddleware::requireRole('dosen', 'kaprodi', 'admin');
+
+            $user = AuthMiddleware::user();
+            $results = $this->service->finalizeKelasGrades((int)$idKelas, $user['id_user']);
+
+            Response::success($results, 'Finalisasi nilai kelas selesai');
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), $e->getCode() ?: 400);
+        }
+    }
 }
