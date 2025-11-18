@@ -13,6 +13,7 @@ use App\Controller\CPLController;
 use App\Controller\MataKuliahController;
 use App\Controller\KelasController;
 use App\Controller\EnrollmentController;
+use App\Controller\RPSController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -122,6 +123,33 @@ $router->get('/mahasiswa/:nim/enrollment-capacity', [EnrollmentController::class
 // Kelas enrollment endpoints
 $router->get('/kelas/:id/enrollment', [EnrollmentController::class, 'getByKelas'], [AuthMiddleware::class]);
 $router->get('/kelas/:id/statistics', [EnrollmentController::class, 'getKelasStatistics'], [AuthMiddleware::class]);
+
+// ============================================
+// RPS MANAGEMENT (Rencana Pembelajaran Semester)
+// ============================================
+
+// RPS CRUD
+$router->get('/rps', [RPSController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/rps/:id', [RPSController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/rps', [RPSController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/rps/:id', [RPSController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/rps/:id', [RPSController::class, 'delete'], [AuthMiddleware::class]);
+
+// RPS workflow
+$router->post('/rps/:id/submit', [RPSController::class, 'submit'], [AuthMiddleware::class]);
+$router->post('/rps/:id/activate', [RPSController::class, 'activate'], [AuthMiddleware::class]);
+$router->post('/rps/:id/archive', [RPSController::class, 'archive'], [AuthMiddleware::class]);
+
+// RPS approval
+$router->post('/rps/approval/:id_approval', [RPSController::class, 'processApproval'], [AuthMiddleware::class]);
+$router->get('/rps/pending-approvals', [RPSController::class, 'getPendingApprovals'], [AuthMiddleware::class]);
+
+// RPS version control
+$router->get('/rps/:id/versions', [RPSController::class, 'getVersions'], [AuthMiddleware::class]);
+$router->post('/rps/:id/versions/:version_number/activate', [RPSController::class, 'setActiveVersion'], [AuthMiddleware::class]);
+
+// RPS statistics
+$router->get('/rps/statistics', [RPSController::class, 'statistics'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
