@@ -14,6 +14,7 @@ use App\Controller\MataKuliahController;
 use App\Controller\KelasController;
 use App\Controller\EnrollmentController;
 use App\Controller\RPSController;
+use App\Controller\CPMKController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -150,6 +151,34 @@ $router->post('/rps/:id/versions/:version_number/activate', [RPSController::clas
 
 // RPS statistics
 $router->get('/rps/statistics', [RPSController::class, 'statistics'], [AuthMiddleware::class]);
+
+// ============================================
+// CPMK MANAGEMENT (Capaian Pembelajaran Mata Kuliah)
+// ============================================
+
+// CPMK CRUD
+$router->get('/cpmk', [CPMKController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/cpmk/:id', [CPMKController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/cpmk', [CPMKController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/cpmk/:id', [CPMKController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/cpmk/:id', [CPMKController::class, 'delete'], [AuthMiddleware::class]);
+
+// SubCPMK
+$router->get('/cpmk/:id/subcpmk', [CPMKController::class, 'getSubCPMK'], [AuthMiddleware::class]);
+$router->post('/cpmk/:id/subcpmk', [CPMKController::class, 'createSubCPMK'], [AuthMiddleware::class]);
+$router->put('/subcpmk/:id', [CPMKController::class, 'updateSubCPMK'], [AuthMiddleware::class]);
+$router->delete('/subcpmk/:id', [CPMKController::class, 'deleteSubCPMK'], [AuthMiddleware::class]);
+
+// CPMK-CPL Mapping
+$router->post('/cpmk/:id/map-cpl', [CPMKController::class, 'mapToCPL'], [AuthMiddleware::class]);
+$router->get('/cpmk/:id/cpl-mappings', [CPMKController::class, 'getCPLMappings'], [AuthMiddleware::class]);
+$router->get('/cpl/:id/cpmk-mappings', [CPMKController::class, 'getCPMKMappingsByCPL'], [AuthMiddleware::class]);
+$router->put('/cpmk-cpl-mapping/:id', [CPMKController::class, 'updateMappingBobot'], [AuthMiddleware::class]);
+$router->delete('/cpmk-cpl-mapping/:id', [CPMKController::class, 'deleteMapping'], [AuthMiddleware::class]);
+
+// Statistics & Validation
+$router->get('/rps/:id/cpmk-statistics', [CPMKController::class, 'getRPSStatistics'], [AuthMiddleware::class]);
+$router->get('/rps/:id/validate-cpmk', [CPMKController::class, 'validateRPSCompleteness'], [AuthMiddleware::class]);
 
 // ============================================
 // Health Check
