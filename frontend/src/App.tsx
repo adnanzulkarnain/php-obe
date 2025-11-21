@@ -19,6 +19,7 @@ const CPMKList = lazy(() => import('./pages/CPMK').then(m => ({ default: m.CPMKL
 const MahasiswaList = lazy(() => import('./pages/Mahasiswa').then(m => ({ default: m.MahasiswaList })));
 const DosenList = lazy(() => import('./pages/Dosen').then(m => ({ default: m.DosenList })));
 const RPSList = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSList })));
+const RPSApprovalPage = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSApprovalPage })));
 const PenilaianList = lazy(() => import('./pages/Penilaian').then(m => ({ default: m.PenilaianList })));
 const KelasList = lazy(() => import('./pages/Kelas').then(m => ({ default: m.KelasList })));
 const KRSPage = lazy(() => import('./pages/Enrollment').then(m => ({ default: m.KRSPage })));
@@ -106,6 +107,14 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
                           <RPSList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="rps/approval"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <RPSApprovalPage />
                         </ProtectedRoute>
                       }
                     />
