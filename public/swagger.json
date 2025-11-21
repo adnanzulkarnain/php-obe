@@ -1,0 +1,430 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OBE System API",
+    "description": "Sistem Informasi Kurikulum OBE (Outcome-Based Education) - RESTful API Documentation",
+    "version": "1.0.0",
+    "contact": {
+      "name": "OBE System Support",
+      "email": "support@obe-system.edu"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://obe-system.edu/license"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api",
+      "description": "Development Server"
+    },
+    {
+      "url": "https://api.obe-system.edu/api",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization"
+    },
+    {
+      "name": "Kurikulum",
+      "description": "Curriculum management"
+    },
+    {
+      "name": "CPL",
+      "description": "Learning outcomes (Capaian Pembelajaran Lulusan)"
+    },
+    {
+      "name": "CPMK",
+      "description": "Course learning outcomes"
+    },
+    {
+      "name": "Mata Kuliah",
+      "description": "Course management"
+    },
+    {
+      "name": "Notifications",
+      "description": "User notifications and messaging"
+    },
+    {
+      "name": "Documents",
+      "description": "File upload and document management"
+    },
+    {
+      "name": "Export",
+      "description": "Data export to PDF and Excel"
+    },
+    {
+      "name": "Analytics",
+      "description": "Analytics and reporting"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and receive JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "kaprodi"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get user profile",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/kurikulum": {
+      "get": {
+        "tags": ["Kurikulum"],
+        "summary": "Get all kurikulum",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of kurikulum",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {"type": "boolean"},
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Kurikulum"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Kurikulum"],
+        "summary": "Create new kurikulum",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KurikulumCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Kurikulum created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get user notifications",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "unread_only",
+            "in": "query",
+            "schema": {"type": "boolean"},
+            "description": "Filter unread notifications only"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {"type": "boolean"},
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Notification"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "unread_count": {"type": "integer"},
+                        "total": {"type": "integer"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/upload": {
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Upload document",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "kategori_dokumen"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "kategori_dokumen": {
+                    "type": "string",
+                    "enum": ["rps", "silabus", "materi", "tugas", "soal", "kurikulum"]
+                  },
+                  "id_ref": {
+                    "type": "integer"
+                  },
+                  "deskripsi": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export/rps/{id}/pdf": {
+      "get": {
+        "tags": ["Export"],
+        "summary": "Export RPS to PDF",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF file",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter JWT token"
+      }
+    },
+    "schemas": {
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "token": {"type": "string"},
+          "user": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id_user": {"type": "integer"},
+          "username": {"type": "string"},
+          "email": {"type": "string"},
+          "role": {"type": "string"}
+        }
+      },
+      "Kurikulum": {
+        "type": "object",
+        "properties": {
+          "id_kurikulum": {"type": "integer"},
+          "kode_kurikulum": {"type": "string"},
+          "nama_kurikulum": {"type": "string"},
+          "tahun_berlaku": {"type": "integer"},
+          "status": {"type": "string", "enum": ["draft", "approved", "active", "inactive"]}
+        }
+      },
+      "KurikulumCreate": {
+        "type": "object",
+        "required": ["id_prodi", "kode_kurikulum", "nama_kurikulum", "tahun_berlaku"],
+        "properties": {
+          "id_prodi": {"type": "string"},
+          "kode_kurikulum": {"type": "string"},
+          "nama_kurikulum": {"type": "string"},
+          "tahun_berlaku": {"type": "integer"},
+          "deskripsi": {"type": "string"}
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id_notification": {"type": "integer"},
+          "judul": {"type": "string"},
+          "pesan": {"type": "string"},
+          "tipe_notifikasi": {"type": "string"},
+          "is_read": {"type": "boolean"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id_document": {"type": "integer"},
+          "nama_file": {"type": "string"},
+          "file_path": {"type": "string"},
+          "tipe_file": {"type": "string"},
+          "ukuran_file": {"type": "integer"},
+          "kategori_dokumen": {"type": "string"}
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "data": {"type": "object"}
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "error": {"type": "string"},
+          "code": {"type": "integer"}
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {"$ref": "#/components/schemas/ErrorResponse"},
+                {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "object",
+                      "additionalProperties": {"type": "string"}
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

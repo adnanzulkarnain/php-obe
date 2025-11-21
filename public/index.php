@@ -12,8 +12,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Router;
 use App\Core\Response;
+use App\Core\Request;
+use App\Core\ExceptionHandler;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\RateLimitMiddleware;
+use App\Middleware\SecurityHeadersMiddleware;
+use App\Middleware\RequestLoggingMiddleware;
 
 // Load environment variables
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -23,24 +28,15 @@ $dotenv->load();
 error_reporting(E_ALL);
 ini_set('display_errors', (string) ($_ENV['APP_DEBUG'] ?? '0'));
 
-set_error_handler(function ($severity, $message, $file, $line) {
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
-
-set_exception_handler(function (Throwable $e) {
-    $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
-
-    Response::json([
-        'success' => false,
-        'error' => $e->getMessage(),
-        'trace' => $_ENV['APP_DEBUG'] === 'true' ? $e->getTrace() : null
-    ], $statusCode);
-});
+// Register exception handler
+ExceptionHandler::register();
 
 // Initialize router
 $router = new Router();
 
 // Apply global middleware
+SecurityHeadersMiddleware::handle();
+
 $corsMiddleware = new CorsMiddleware();
 $corsMiddleware->handle();
 
@@ -49,6 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     Response::json(['status' => 'OK'], 200);
     exit;
 }
+
+// Apply rate limiting and request logging
+$request = new Request();
+RateLimitMiddleware::handle($request);
+RequestLoggingMiddleware::start($request);
 
 // Load routes
 require_once __DIR__ . '/../src/routes.php';

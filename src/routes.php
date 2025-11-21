@@ -22,6 +22,9 @@ use App\Controller\FakultasController;
 use App\Controller\ProdiController;
 use App\Controller\PrasyaratMKController;
 use App\Controller\AnalyticsController;
+use App\Controller\NotificationController;
+use App\Controller\DocumentController;
+use App\Controller\ExportController;
 use App\Middleware\AuthMiddleware;
 
 // ============================================
@@ -352,16 +355,77 @@ $router->get('/analytics/kurikulum/:id/cpl-report', [AnalyticsController::class,
 $router->get('/analytics/mahasiswa/:nim/performance', [AnalyticsController::class, 'getMahasiswaPerformance'], [AuthMiddleware::class]);
 
 // ============================================
-// Health Check
+// NOTIFICATIONS
 // ============================================
 
-$router->get('/health', function () {
-    \App\Core\Response::json([
-        'status' => 'OK',
-        'timestamp' => date('Y-m-d H:i:s'),
-        'environment' => $_ENV['APP_ENV'] ?? 'production',
-    ]);
-});
+// Get notifications
+$router->get('/notifications', [NotificationController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/notifications/unread-count', [NotificationController::class, 'unreadCount'], [AuthMiddleware::class]);
+$router->get('/notifications/:id', [NotificationController::class, 'show'], [AuthMiddleware::class]);
+
+// Mark as read
+$router->post('/notifications/:id/read', [NotificationController::class, 'markAsRead'], [AuthMiddleware::class]);
+$router->post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'], [AuthMiddleware::class]);
+
+// Delete notification
+$router->delete('/notifications/:id', [NotificationController::class, 'delete'], [AuthMiddleware::class]);
+
+// Send announcement (Admin/Kaprodi only)
+$router->post('/notifications/announcement', [NotificationController::class, 'createAnnouncement'], [AuthMiddleware::class]);
+
+// Test email (Development only)
+$router->post('/notifications/test-email', [NotificationController::class, 'testEmail'], [AuthMiddleware::class]);
+
+// ============================================
+// DOCUMENTS & FILE UPLOAD
+// ============================================
+
+// Get documents
+$router->get('/documents', [DocumentController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/documents/by-ref', [DocumentController::class, 'getByRef'], [AuthMiddleware::class]);
+$router->get('/documents/my-documents', [DocumentController::class, 'myDocuments'], [AuthMiddleware::class]);
+$router->get('/documents/:id', [DocumentController::class, 'show'], [AuthMiddleware::class]);
+
+// Upload & manage documents
+$router->post('/documents/upload', [DocumentController::class, 'upload'], [AuthMiddleware::class]);
+$router->put('/documents/:id', [DocumentController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/documents/:id', [DocumentController::class, 'delete'], [AuthMiddleware::class]);
+
+// Download document
+$router->get('/documents/:id/download', [DocumentController::class, 'download'], [AuthMiddleware::class]);
+
+// Storage & configuration
+$router->get('/documents/storage-usage', [DocumentController::class, 'storageUsage'], [AuthMiddleware::class]);
+$router->get('/documents/upload-config', [DocumentController::class, 'uploadConfig'], [AuthMiddleware::class]);
+$router->get('/documents/statistics', [DocumentController::class, 'statistics'], [AuthMiddleware::class]);
+
+// ============================================
+// EXPORT & REPORTS
+// ============================================
+
+// Export RPS
+$router->get('/export/rps/:id/pdf', [ExportController::class, 'exportRPSToPDF'], [AuthMiddleware::class]);
+
+// Export Analytics
+$router->post('/export/analytics/pdf', [ExportController::class, 'exportAnalyticsToPDF'], [AuthMiddleware::class]);
+$router->post('/export/analytics/excel', [ExportController::class, 'exportAnalyticsToExcel'], [AuthMiddleware::class]);
+
+// Export Nilai
+$router->get('/export/nilai/:id_kelas/excel', [ExportController::class, 'exportNilaiToExcel'], [AuthMiddleware::class]);
+
+// Export Mahasiswa
+$router->get('/export/mahasiswa/excel', [ExportController::class, 'exportMahasiswaToExcel'], [AuthMiddleware::class]);
+
+// Export Kurikulum Comparison
+$router->post('/export/kurikulum/comparison', [ExportController::class, 'exportKurikulumComparison'], [AuthMiddleware::class]);
+
+// ============================================
+// Health Check & Monitoring
+// ============================================
+
+$router->get('/health', [\App\Controller\HealthController::class, 'check']);
+$router->get('/health/detailed', [\App\Controller\HealthController::class, 'detailed']);
+$router->get('/health/metrics', [\App\Controller\HealthController::class, 'metrics']);
 
 // Root endpoint
 $router->get('/', function () {
