@@ -187,5 +187,7 @@ export const useConfirmDialog = () => {
     />
   );
 
-  return { confirm, Dialog };
+  const closeDialog = handleCancel;
+
+  return { confirm, Dialog, isOpen, config, closeDialog };
 };

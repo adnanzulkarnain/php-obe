@@ -76,3 +76,29 @@ export const SkeletonList: React.FC<{ items?: number }> = ({ items = 5 }) => {
     </div>
   );
 };
+
+// Unified Skeleton Loader with variant support
+interface SkeletonLoaderProps {
+  variant?: 'base' | 'card' | 'table' | 'list';
+  rows?: number;
+  columns?: number;
+  items?: number;
+}
+
+export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
+  variant = 'base',
+  rows,
+  columns,
+  items,
+}) => {
+  switch (variant) {
+    case 'card':
+      return <SkeletonCard />;
+    case 'table':
+      return <SkeletonTable rows={rows} columns={columns} />;
+    case 'list':
+      return <SkeletonList items={items} />;
+    default:
+      return <Skeleton className="h-4 w-full" />;
+  }
+};
