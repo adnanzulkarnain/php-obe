@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { FiPlus, FiEdit, FiTrash2, FiFilter, FiFileText, FiSend, FiCheckCircle, FiArchive } from 'react-icons/fi';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { ConfirmDialog, useConfirmDialog } from '../../components/ConfirmDialog';
+import { RPSWizard } from './RPSWizard';
 
 export const RPSList: React.FC = () => {
   const [rpsList, setRpsList] = useState<RPS[]>([]);
@@ -153,11 +154,6 @@ export const RPSList: React.FC = () => {
   const getMKName = (kode_mk: string) => {
     const mk = mataKuliahs.find(m => m.kode_mk === kode_mk);
     return mk ? mk.nama_mk : kode_mk;
-  };
-
-  const getDosenName = (id_dosen: number) => {
-    const dosen = dosens.find(d => d.id_dosen === id_dosen);
-    return dosen ? dosen.nama : '-';
   };
 
   if (isLoading && rpsList.length === 0) {
@@ -318,13 +314,13 @@ export const RPSList: React.FC = () => {
                       <div className="text-xs text-gray-500 dark:text-gray-400">{getMKName(rps.kode_mk)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      {getDosenName(rps.id_dosen)}
+                      {rps.nama_ketua || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      {rps.tahun_akademik} / {rps.semester}
+                      {rps.tahun_ajaran} / {rps.semester_berlaku}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      v{rps.versi}
+                      {rps.current_version || 'v1'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(rps.status)}
@@ -375,7 +371,18 @@ export const RPSList: React.FC = () => {
         </div>
       </div>
 
-      {showForm && (
+      {showForm && !editingRPS && (
+        <RPSWizard
+          kurikulumId={filterKurikulum!}
+          kurikulums={kurikulums}
+          mataKuliahs={mataKuliahs}
+          dosens={dosens}
+          onClose={() => { setShowForm(false); }}
+          onSuccess={() => { loadRPSList(); }}
+        />
+      )}
+
+      {showForm && editingRPS && (
         <RPSFormModal
           rps={editingRPS}
           kurikulumId={filterKurikulum!}
@@ -406,14 +413,10 @@ interface RPSFormModalProps {
   onClose: () => void;
 }
 
-const RPSFormModal: React.FC<RPSFormModalProps> = ({ rps, kurikulumId, mataKuliahs, dosens, onClose }) => {
-  const currentYear = new Date().getFullYear();
+const RPSFormModal: React.FC<RPSFormModalProps> = ({ rps, onClose }) => {
   const [formData, setFormData] = useState({
-    kode_mk: rps?.kode_mk || '',
-    id_kurikulum: rps?.id_kurikulum || kurikulumId,
-    id_dosen: rps?.id_dosen || 0,
-    tahun_akademik: rps?.tahun_akademik || `${currentYear}/${currentYear + 1}`,
-    semester: rps?.semester || 'Ganjil',
+    deskripsi_mk: rps?.deskripsi_mk || '',
+    deskripsi_singkat: rps?.deskripsi_singkat || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -425,9 +428,6 @@ const RPSFormModal: React.FC<RPSFormModalProps> = ({ rps, kurikulumId, mataKulia
       if (rps) {
         await rpsService.update(rps.id_rps, formData);
         toast.success('RPS updated successfully');
-      } else {
-        await rpsService.create(formData);
-        toast.success('RPS created successfully');
       }
       onClose();
     } catch (error: any) {
@@ -447,73 +447,40 @@ const RPSFormModal: React.FC<RPSFormModalProps> = ({ rps, kurikulumId, mataKulia
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Mata Kuliah <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.kode_mk}
-                onChange={(e) => setFormData({ ...formData, kode_mk: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-                disabled={!!rps}
-              >
-                <option value="">Select Mata Kuliah</option>
-                {mataKuliahs.map((mk) => (
-                  <option key={mk.kode_mk} value={mk.kode_mk}>
-                    {mk.kode_mk} - {mk.nama_mk}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Dosen Pengampu <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.id_dosen}
-                onChange={(e) => setFormData({ ...formData, id_dosen: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              >
-                <option value="0">Select Dosen</option>
-                {dosens.map((d) => (
-                  <option key={d.id_dosen} value={d.id_dosen}>
-                    {d.nama} ({d.nidn})
-                  </option>
-                ))}
-              </select>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <strong>Mata Kuliah:</strong> {rps?.kode_mk} - {rps?.nama_mk}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <strong>Semester:</strong> {rps?.semester_berlaku} | <strong>Tahun Ajaran:</strong> {rps?.tahun_ajaran}
+              </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Tahun Akademik <span className="text-red-500">*</span>
+                Deskripsi Mata Kuliah
               </label>
-              <input
-                type="text"
-                value={formData.tahun_akademik}
-                onChange={(e) => setFormData({ ...formData, tahun_akademik: e.target.value })}
+              <textarea
+                value={formData.deskripsi_mk}
+                onChange={(e) => setFormData({ ...formData, deskripsi_mk: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="2024/2025"
-                required
+                rows={6}
+                placeholder="Enter course description..."
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Semester <span className="text-red-500">*</span>
+                Deskripsi Singkat
               </label>
-              <select
-                value={formData.semester}
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+              <textarea
+                value={formData.deskripsi_singkat}
+                onChange={(e) => setFormData({ ...formData, deskripsi_singkat: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              >
-                <option value="Ganjil">Ganjil</option>
-                <option value="Genap">Genap</option>
-              </select>
+                rows={3}
+                placeholder="Enter brief description..."
+              />
             </div>
           </div>
 
