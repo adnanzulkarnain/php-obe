@@ -229,15 +229,15 @@ export const RPSApprovalPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <FiCalendar className="flex-shrink-0" />
                           <span>
-                            Tahun Akademik: {rps.tahun_akademik} - Semester {rps.semester}
+                            Tahun Ajaran: {rps.tahun_ajaran} - Semester {rps.semester_berlaku}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <FiClock className="flex-shrink-0" />
                           <span>
-                            Versi: {rps.versi}
-                            {rps.submitted_at &&
-                              ` - Submitted: ${new Date(rps.submitted_at).toLocaleDateString('id-ID')}`}
+                            {rps.current_version && `Versi: ${rps.current_version}`}
+                            {rps.created_at &&
+                              ` - Created: ${new Date(rps.created_at).toLocaleDateString('id-ID')}`}
                           </span>
                         </div>
                       </div>

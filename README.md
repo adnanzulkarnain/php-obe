@@ -58,6 +58,9 @@
 - ✅ **Role-Based Access Control** - Different views per role
 - ✅ **Dashboard** - Overview with real-time statistics and API integration
 - ✅ **Kurikulum Management** - List, create, edit, approve with filters
+- ✅ **CPL Management** - Graduate learning outcomes CRUD with category badges
+- ✅ **CPMK Management** - Course learning outcomes with SubCPMK & CPL mapping
+- ✅ **RPS Wizard** - Multi-step form for creating Semester Learning Plans (4 steps)
 - ✅ **Kelas Management** - Class management with status workflow & teaching assignments
 - ✅ **KRS Management** - Student course registration with SKS validation
 - ✅ **Mahasiswa Management** - Student data CRUD with advanced filtering
@@ -74,6 +77,7 @@
 - 🛡️ **Error Boundary** - Graceful error handling
 - 🎨 **Skeleton Loaders** - Better loading experience
 - 💬 **Confirm Dialogs** - Reusable confirmation modals
+- 🧙 **Wizard Component** - Reusable multi-step form with progress indicator & validation
 - 🔍 **Advanced Filter Component** - Reusable filtering with search across all list pages
 - 📊 **Excel Export** - Export analytics data to Excel (xlsx)
 - 📈 **Data Visualization** - Interactive charts with Recharts
@@ -281,6 +285,44 @@ Automatically detects prefers-color-scheme
 4. Click anywhere outside or link to close
 ```
 
+### RPS Wizard (Multi-step Form)
+
+The RPS Wizard provides a guided, step-by-step process for creating Rencana Pembelajaran Semester:
+
+**Step 1: Basic Information**
+- Select Kurikulum (pre-filled based on filter)
+- Choose Mata Kuliah from available courses
+- Set Semester Berlaku (Ganjil/Genap)
+- Enter Tahun Ajaran (e.g., 2024/2025)
+- Select Ketua Pengembang (Course Leader)
+- Set Tanggal Disusun
+
+**Step 2: Course Description**
+- Enter comprehensive course description (minimum 20 characters)
+- Provide brief course summary (minimum 10 characters)
+- Preview character count for both fields
+
+**Step 3: Learning Outcomes (CPMK)**
+- View available CPL from the selected Kurikulum
+- Add CPMK with code and description
+- Manage CPMK list (add/remove)
+- Optional: Can skip and add CPMK later
+
+**Step 4: Review & Submit**
+- Review all entered information
+- Verify Basic Info, Course Description, and CPMK list
+- Submit to create RPS as DRAFT status
+- Edit and add more details later before submitting for approval
+
+**Features:**
+- ✅ Progress indicator showing current step
+- ✅ Navigation between steps (Previous/Next buttons)
+- ✅ Step validation (cannot proceed if required fields are empty)
+- ✅ Click on completed steps to jump back
+- ✅ Dark mode support
+- ✅ Responsive design
+- ✅ Form data persistence during navigation
+
 ## 📚 API Documentation
 
 ### Interactive Swagger UI
@@ -467,6 +509,7 @@ php-obe/
 │   ├── src/
 │   │   ├── components/        # Reusable Components
 │   │   │   ├── Layout/       # MainLayout, Navbar, Sidebar
+│   │   │   ├── Wizard/       # Multi-step wizard component
 │   │   │   ├── AdvancedFilter.tsx  # Advanced filtering component
 │   │   │   ├── ErrorBoundary.tsx
 │   │   │   ├── SkeletonLoader.tsx
@@ -483,7 +526,9 @@ php-obe/
 │   │   │   ├── Enrollment/   # KRS management
 │   │   │   ├── Mahasiswa/    # Student management
 │   │   │   ├── Dosen/        # Lecturer management
-│   │   │   ├── RPS/          # RPS approval workflow
+│   │   │   ├── CPL/          # CPL management pages
+│   │   │   ├── CPMK/         # CPMK management pages
+│   │   │   ├── RPS/          # RPS wizard & approval workflow
 │   │   │   ├── Analytics/    # Analytics dashboard
 │   │   │   ├── Notifications/
 │   │   │   ├── Profile.tsx
@@ -637,15 +682,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] KRS (Enrollment) Management
 - [x] Mahasiswa Management with Advanced Filtering
 - [x] Dosen Management Pages
+- [x] CPL Management Pages (CRUD with Category Badges)
+- [x] CPMK Management Pages (with SubCPMK & CPL Mapping)
+- [x] RPS Wizard (Multi-step Form with 4 Steps)
 - [x] RPS Approval Workflow UI
 - [x] Analytics Dashboard with Charts (Recharts)
 - [x] Advanced Filter Component (Reusable)
 - [x] Excel Export Functionality
-
-### In Progress 🚧
-- [ ] CPL Management Pages
-- [ ] CPMK Management Pages
-- [ ] RPS Wizard (Multi-step Form)
+- [x] Wizard Component (Reusable Multi-step Form)
 
 ### Planned 📝
 - [ ] Progressive Web App (PWA)

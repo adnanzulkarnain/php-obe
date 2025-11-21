@@ -5,14 +5,32 @@ export interface RPS {
   id_rps: number;
   kode_mk: string;
   id_kurikulum: number;
-  id_dosen: number;
-  tahun_akademik: string;
-  semester: string;
-  status: 'draft' | 'submitted' | 'approved' | 'active' | 'archived';
-  versi: number;
-  tanggal_berlaku?: string;
+  semester_berlaku: string; // 'Ganjil' | 'Genap'
+  tahun_ajaran: string; // '2024/2025'
+  status: 'draft' | 'submitted' | 'revised' | 'approved' | 'active' | 'archived';
+  ketua_pengembang?: string;
+  tanggal_disusun?: string;
+  deskripsi_mk?: string;
+  deskripsi_singkat?: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
+  // Additional fields from joins
+  nama_mk?: string;
+  sks?: number;
+  nama_ketua?: string;
+  current_version?: string;
+}
+
+export interface CreateRPSData {
+  kode_mk: string;
+  id_kurikulum: number;
+  semester_berlaku: string;
+  tahun_ajaran: string;
+  ketua_pengembang?: string;
+  tanggal_disusun?: string;
+  deskripsi_mk?: string;
+  deskripsi_singkat?: string;
 }
 
 export const rpsService = {
@@ -27,13 +45,7 @@ export const rpsService = {
   },
 
   // Create new RPS
-  create: (data: {
-    kode_mk: string;
-    id_kurikulum: number;
-    id_dosen: number;
-    tahun_akademik: string;
-    semester: string;
-  }) => {
+  create: (data: CreateRPSData) => {
     return api.post<ApiResponse<RPS>>('/rps', data);
   },
 
