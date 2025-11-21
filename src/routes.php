@@ -420,16 +420,12 @@ $router->get('/export/mahasiswa/excel', [ExportController::class, 'exportMahasis
 $router->post('/export/kurikulum/comparison', [ExportController::class, 'exportKurikulumComparison'], [AuthMiddleware::class]);
 
 // ============================================
-// Health Check
+// Health Check & Monitoring
 // ============================================
 
-$router->get('/health', function () {
-    \App\Core\Response::json([
-        'status' => 'OK',
-        'timestamp' => date('Y-m-d H:i:s'),
-        'environment' => $_ENV['APP_ENV'] ?? 'production',
-    ]);
-});
+$router->get('/health', [\App\Controller\HealthController::class, 'check']);
+$router->get('/health/detailed', [\App\Controller\HealthController::class, 'detailed']);
+$router->get('/health/metrics', [\App\Controller\HealthController::class, 'metrics']);
 
 // Root endpoint
 $router->get('/', function () {

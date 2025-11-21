@@ -4,12 +4,27 @@ Sistem Informasi Kurikulum berbasis Outcome-Based Education (OBE) dengan Multi-C
 
 ## 🎯 Fitur Utama
 
+### Core Features
 - ✅ **Multi-Curriculum Support** - Kelola beberapa kurikulum secara bersamaan
 - ✅ **CPL & CPMK Management** - Definisi dan pemetaan capaian pembelajaran
 - ✅ **RPS Digital** - Pembuatan dan approval RPS elektronik
 - ✅ **Sistem Penilaian Otomatis** - Perhitungan ketercapaian CPMK & CPL
 - ✅ **Analytics Dashboard** - Monitoring dan pelaporan OBE compliance
 - ✅ **Audit Trail** - Logging lengkap untuk akreditasi
+
+### Infrastructure Features (NEW!)
+- ✅ **Testing Infrastructure** - PHPUnit test framework dengan test suites lengkap
+- ✅ **Notification System** - Email & in-app notifications
+- ✅ **File Upload & Document Management** - Secure file handling
+- ✅ **PDF/Excel Export** - Export RPS, analytics, dan data ke PDF/Excel
+- ✅ **Rate Limiting** - API protection dengan token bucket algorithm
+- ✅ **Exception Handling** - Centralized error handling dengan custom exceptions
+- ✅ **Structured Logging** - Monolog dengan log rotation (30 days)
+- ✅ **Validation Service** - Centralized validation dengan Respect\Validation
+- ✅ **API Documentation** - OpenAPI/Swagger documentation
+- ✅ **Database Migrations** - Migration system dengan rollback support
+- ✅ **Security Headers** - Comprehensive security headers middleware
+- ✅ **Health Check** - Detailed system monitoring endpoints
 
 ## 🛠️ Technology Stack
 
@@ -20,10 +35,15 @@ Sistem Informasi Kurikulum berbasis Outcome-Based Education (OBE) dengan Multi-C
 
 ## 📋 Prerequisites
 
-- PHP >= 8.3
+- PHP >= 8.3 with extensions:
+  - pdo, pdo_pgsql
+  - json, mbstring
+  - gd (for PDF generation)
+  - zip (for Excel export)
 - PostgreSQL >= 14
 - Composer
 - Apache/Nginx with mod_rewrite
+- Optional: Redis (for persistent rate limiting)
 
 ## 🚀 Installation
 
@@ -64,8 +84,12 @@ JWT_SECRET=your_secret_key_here
 # Create database
 createdb obe_system
 
-# Execute schema
+# Execute schema (Option 1: Direct SQL)
 psql -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+
+# Or use migration system (Option 2: Recommended)
+php migrate.php migrate
+php migrate.php seed
 ```
 
 ### 5. Create Storage Directories
