@@ -17,6 +17,7 @@ const KurikulumList = lazy(() => import('./pages/Kurikulum/KurikulumList').then(
 const CPLList = lazy(() => import('./pages/CPL').then(m => ({ default: m.CPLList })));
 const CPMKList = lazy(() => import('./pages/CPMK').then(m => ({ default: m.CPMKList })));
 const MahasiswaList = lazy(() => import('./pages/Mahasiswa').then(m => ({ default: m.MahasiswaList })));
+const DosenList = lazy(() => import('./pages/Dosen').then(m => ({ default: m.DosenList })));
 const NotificationList = lazy(() => import('./pages/Notifications/NotificationList').then(m => ({ default: m.NotificationList })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -100,6 +101,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
                           <MahasiswaList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Dosen Routes */}
+                    <Route
+                      path="dosen"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <DosenList />
                         </ProtectedRoute>
                       }
                     />

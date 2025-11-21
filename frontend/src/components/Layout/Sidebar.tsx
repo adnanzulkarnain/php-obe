@@ -27,6 +27,7 @@ const menuItems: MenuItem[] = [
   { name: 'RPS', path: '/rps', icon: <FiFileText />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'Penilaian', path: '/penilaian', icon: <FiBarChart2 />, roles: ['admin', 'dosen'] },
   { name: 'Mahasiswa', path: '/mahasiswa', icon: <FiUsers />, roles: ['admin', 'kaprodi', 'dosen'] },
+  { name: 'Dosen', path: '/dosen', icon: <FiUsers />, roles: ['admin', 'kaprodi'] },
   { name: 'Analytics', path: '/analytics', icon: <FiBarChart2 />, roles: ['admin', 'kaprodi'] },
   { name: 'Notifications', path: '/notifications', icon: <FiBell /> },
 ];
