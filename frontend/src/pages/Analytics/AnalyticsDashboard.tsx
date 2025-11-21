@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 import {
   FiTrendingUp,
   FiBarChart2,
   FiPieChart,
   FiFilter,
+  FiDownload,
 } from 'react-icons/fi';
 import {
   LineChart,
@@ -102,6 +104,38 @@ export const AnalyticsDashboard: React.FC = () => {
     return null;
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // Create a new workbook
+      const wb = XLSX.utils.book_new();
+
+      // Export Trend Data
+      if (trendChartData.length > 0) {
+        const trendWS = XLSX.utils.json_to_sheet(trendChartData);
+        XLSX.utils.book_append_sheet(wb, trendWS, 'Trend Data');
+      }
+
+      // Export Grade Distribution
+      const gradeWS = XLSX.utils.json_to_sheet(gradeDistribution);
+      XLSX.utils.book_append_sheet(wb, gradeWS, 'Grade Distribution');
+
+      // Export Performance Data
+      const performanceWS = XLSX.utils.json_to_sheet(performanceData);
+      XLSX.utils.book_append_sheet(wb, performanceWS, 'Performance by Semester');
+
+      // Generate filename with current date
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `Analytics_Report_${today}.xlsx`;
+
+      // Write the workbook
+      XLSX.writeFile(wb, filename);
+      toast.success('Data berhasil diekspor ke Excel');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Gagal mengekspor data ke Excel');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -114,6 +148,13 @@ export const AnalyticsDashboard: React.FC = () => {
             Visualisasi dan analisis data pembelajaran
           </p>
         </div>
+        <button
+          onClick={handleExportToExcel}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+        >
+          <FiDownload />
+          Export to Excel
+        </button>
       </div>
 
       {/* Filters */}
