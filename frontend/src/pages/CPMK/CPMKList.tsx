@@ -58,7 +58,7 @@ export const CPMKList: React.FC = () => {
       const response = await mataKuliahService.getAll({
         id_kurikulum: selectedKurikulum || undefined
       });
-      if (response.data) {
+      if (response.data && Array.isArray(response.data)) {
         setMataKuliahs(response.data);
       }
     } catch (error: any) {
@@ -74,7 +74,7 @@ export const CPMKList: React.FC = () => {
         kode_mk: selectedMK || undefined,
         id_kurikulum: selectedKurikulum || undefined
       });
-      if (response.data) {
+      if (response.data && Array.isArray(response.data)) {
         setCpmks(response.data);
       }
     } catch (error: any) {
@@ -297,7 +297,14 @@ export const CPMKList: React.FC = () => {
         />
       )}
 
-      <ConfirmDialog isOpen={isOpen} config={config} onClose={closeDialog} />
+      {isOpen && (
+        <ConfirmDialog
+          {...config}
+          isOpen={isOpen}
+          onConfirm={() => {}}
+          onCancel={closeDialog}
+        />
+      )}
     </div>
   );
 };

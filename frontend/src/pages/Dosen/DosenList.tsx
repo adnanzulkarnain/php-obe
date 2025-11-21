@@ -1,34 +1,29 @@
 import { useState, useEffect } from 'react';
-import { mahasiswaService, type Mahasiswa } from '../../services/mahasiswa.service';
+import { dosenService, type Dosen } from '../../services/dosen.service';
 import { prodiService, type Prodi } from '../../services/prodi.service';
-import { kurikulumService } from '../../services/kurikulum.service';
-import type { Kurikulum } from '../../types/api';
 import { toast } from 'react-toastify';
 import { FiPlus, FiEdit, FiTrash2, FiFilter, FiUsers, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { ConfirmDialog, useConfirmDialog } from '../../components/ConfirmDialog';
 
-export const MahasiswaList: React.FC = () => {
-  const [mahasiswas, setMahasiswas] = useState<Mahasiswa[]>([]);
+export const DosenList: React.FC = () => {
+  const [dosens, setDosens] = useState<Dosen[]>([]);
   const [prodis, setProdis] = useState<Prodi[]>([]);
-  const [kurikulums, setKurikulums] = useState<Kurikulum[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterProdi, setFilterProdi] = useState<string>('');
-  const [filterAngkatan, setFilterAngkatan] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
-  const [editingMahasiswa, setEditingMahasiswa] = useState<Mahasiswa | null>(null);
+  const [editingDosen, setEditingDosen] = useState<Dosen | null>(null);
   const { isOpen, config, confirm, closeDialog } = useConfirmDialog();
 
   useEffect(() => {
     loadProdis();
-    loadKurikulums();
-    loadMahasiswas();
+    loadDosens();
   }, []);
 
   useEffect(() => {
-    loadMahasiswas();
-  }, [filterProdi, filterAngkatan, filterStatus]);
+    loadDosens();
+  }, [filterProdi, filterStatus]);
 
   const loadProdis = async () => {
     try {
@@ -42,91 +37,66 @@ export const MahasiswaList: React.FC = () => {
     }
   };
 
-  const loadKurikulums = async () => {
-    try {
-      const response = await kurikulumService.getAll();
-      if (response.data) {
-        setKurikulums(response.data);
-      }
-    } catch (error: any) {
-      toast.error('Failed to load kurikulum');
-      console.error(error);
-    }
-  };
-
-  const loadMahasiswas = async () => {
+  const loadDosens = async () => {
     try {
       setIsLoading(true);
       const params: any = {};
       if (filterProdi) params.id_prodi = filterProdi;
-      if (filterAngkatan) params.angkatan = parseInt(filterAngkatan);
       if (filterStatus) params.status = filterStatus;
 
-      const response = await mahasiswaService.getAll(params);
+      const response = await dosenService.getAll(params);
       if (response.data && Array.isArray(response.data)) {
-        setMahasiswas(response.data);
+        setDosens(response.data);
       }
     } catch (error: any) {
-      toast.error('Failed to load mahasiswa');
+      toast.error('Failed to load dosen');
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDelete = async (mahasiswa: Mahasiswa) => {
+  const handleDelete = async (dosen: Dosen) => {
     const confirmed = await confirm({
       type: 'danger',
-      title: 'Delete Mahasiswa',
-      message: `Are you sure you want to delete mahasiswa "${mahasiswa.nama}" (${mahasiswa.nim})? This action cannot be undone.`,
+      title: 'Delete Dosen',
+      message: `Are you sure you want to delete dosen "${dosen.nama}" (${dosen.nidn})? This action cannot be undone.`,
       confirmText: 'Delete',
       cancelText: 'Cancel',
     });
 
     if (confirmed) {
       try {
-        await mahasiswaService.delete(mahasiswa.nim);
-        toast.success('Mahasiswa deleted successfully');
-        loadMahasiswas();
+        await dosenService.delete(dosen.id_dosen);
+        toast.success('Dosen deleted successfully');
+        loadDosens();
       } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to delete mahasiswa');
+        toast.error(error.response?.data?.message || 'Failed to delete dosen');
       }
     }
   };
 
-  // Future: implement status change dropdown in table
-  // const handleChangeStatus = async (mahasiswa: Mahasiswa, newStatus: string) => {
-  //   try {
-  //     await mahasiswaService.changeStatus(mahasiswa.nim, newStatus);
-  //     toast.success('Status updated successfully');
-  //     loadMahasiswas();
-  //   } catch (error: any) {
-  //     toast.error(error.response?.data?.message || 'Failed to update status');
-  //   }
-  // };
-
-  const handleEdit = (mahasiswa: Mahasiswa) => {
-    setEditingMahasiswa(mahasiswa);
+  const handleEdit = (dosen: Dosen) => {
+    setEditingDosen(dosen);
     setShowForm(true);
   };
 
   const handleAddNew = () => {
-    setEditingMahasiswa(null);
+    setEditingDosen(null);
     setShowForm(true);
   };
 
   const handleFormClose = () => {
     setShowForm(false);
-    setEditingMahasiswa(null);
-    loadMahasiswas();
+    setEditingDosen(null);
+    loadDosens();
   };
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       aktif: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
       cuti: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      lulus: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      keluar: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      pensiun: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       non_aktif: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
     };
 
@@ -137,7 +107,7 @@ export const MahasiswaList: React.FC = () => {
     );
   };
 
-  if (isLoading && mahasiswas.length === 0) {
+  if (isLoading && dosens.length === 0) {
     return <SkeletonLoader variant="table" />;
   }
 
@@ -146,10 +116,10 @@ export const MahasiswaList: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Mahasiswa Management
+            Dosen Management
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage student data and information
+            Manage lecturer data and information
           </p>
         </div>
         <button
@@ -157,7 +127,7 @@ export const MahasiswaList: React.FC = () => {
           className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
           <FiPlus className="mr-2" />
-          Add Mahasiswa
+          Add Dosen
         </button>
       </div>
 
@@ -165,7 +135,7 @@ export const MahasiswaList: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex items-start gap-4">
           <FiFilter className="text-gray-500 dark:text-gray-400 mt-2" />
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Program Studi
@@ -186,19 +156,6 @@ export const MahasiswaList: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Angkatan
-              </label>
-              <input
-                type="number"
-                value={filterAngkatan}
-                onChange={(e) => setFilterAngkatan(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="e.g., 2023"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Status
               </label>
               <select
@@ -209,8 +166,7 @@ export const MahasiswaList: React.FC = () => {
                 <option value="">All Status</option>
                 <option value="aktif">Aktif</option>
                 <option value="cuti">Cuti</option>
-                <option value="lulus">Lulus</option>
-                <option value="keluar">Keluar</option>
+                <option value="pensiun">Pensiun</option>
                 <option value="non_aktif">Non-Aktif</option>
               </select>
             </div>
@@ -225,7 +181,7 @@ export const MahasiswaList: React.FC = () => {
             <FiUsers className="text-3xl text-primary-600 dark:text-primary-400 mr-3" />
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{mahasiswas.length}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{dosens.length}</p>
             </div>
           </div>
         </div>
@@ -235,7 +191,7 @@ export const MahasiswaList: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Aktif</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {mahasiswas.filter(m => m.status === 'aktif').length}
+                {dosens.filter(d => d.status === 'aktif').length}
               </p>
             </div>
           </div>
@@ -246,7 +202,7 @@ export const MahasiswaList: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Cuti</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {mahasiswas.filter(m => m.status === 'cuti').length}
+                {dosens.filter(d => d.status === 'cuti').length}
               </p>
             </div>
           </div>
@@ -255,9 +211,9 @@ export const MahasiswaList: React.FC = () => {
           <div className="flex items-center">
             <FiCheckCircle className="text-3xl text-blue-600 dark:text-blue-400 mr-3" />
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Lulus</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Pensiun</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {mahasiswas.filter(m => m.status === 'lulus').length}
+                {dosens.filter(d => d.status === 'pensiun').length}
               </p>
             </div>
           </div>
@@ -271,7 +227,7 @@ export const MahasiswaList: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  NIM
+                  NIDN
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Name
@@ -280,7 +236,7 @@ export const MahasiswaList: React.FC = () => {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Angkatan
+                  Jabatan
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
@@ -297,41 +253,41 @@ export const MahasiswaList: React.FC = () => {
                     <SkeletonLoader variant="list" />
                   </td>
                 </tr>
-              ) : mahasiswas.length === 0 ? (
+              ) : dosens.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    No mahasiswa found. Click "Add Mahasiswa" to create one.
+                    No dosen found. Click "Add Dosen" to create one.
                   </td>
                 </tr>
               ) : (
-                mahasiswas.map((mahasiswa) => (
-                  <tr key={mahasiswa.nim} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                dosens.map((dosen) => (
+                  <tr key={dosen.id_dosen} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {mahasiswa.nim}
+                      {dosen.nidn}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      {mahasiswa.nama}
+                      {dosen.nama}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {mahasiswa.email}
+                      {dosen.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                      {mahasiswa.angkatan}
+                      {dosen.jabatan_fungsional || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(mahasiswa.status)}
+                      {getStatusBadge(dosen.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center space-x-3">
                         <button
-                          onClick={() => handleEdit(mahasiswa)}
+                          onClick={() => handleEdit(dosen)}
                           className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                           title="Edit"
                         >
                           <FiEdit className="text-lg" />
                         </button>
                         <button
-                          onClick={() => handleDelete(mahasiswa)}
+                          onClick={() => handleDelete(dosen)}
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                           title="Delete"
                         >
@@ -349,10 +305,9 @@ export const MahasiswaList: React.FC = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <MahasiswaFormModal
-          mahasiswa={editingMahasiswa}
+        <DosenFormModal
+          dosen={editingDosen}
           prodis={prodis}
-          kurikulums={kurikulums}
           onClose={handleFormClose}
         />
       )}
@@ -369,25 +324,23 @@ export const MahasiswaList: React.FC = () => {
   );
 };
 
-// Mahasiswa Form Modal Component
-interface MahasiswaFormModalProps {
-  mahasiswa: Mahasiswa | null;
+// Dosen Form Modal Component
+interface DosenFormModalProps {
+  dosen: Dosen | null;
   prodis: Prodi[];
-  kurikulums: Kurikulum[];
   onClose: () => void;
 }
 
-const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prodis, kurikulums, onClose }) => {
+const DosenFormModal: React.FC<DosenFormModalProps> = ({ dosen, prodis, onClose }) => {
   const [formData, setFormData] = useState({
-    nim: mahasiswa?.nim || '',
-    id_prodi: mahasiswa?.id_prodi || '',
-    id_kurikulum: mahasiswa?.id_kurikulum || 0,
-    nama: mahasiswa?.nama || '',
-    email: mahasiswa?.email || '',
-    angkatan: mahasiswa?.angkatan || new Date().getFullYear(),
-    jenis_kelamin: mahasiswa?.jenis_kelamin || 'L',
-    no_telepon: mahasiswa?.no_telepon || '',
-    alamat: mahasiswa?.alamat || '',
+    nidn: dosen?.nidn || '',
+    id_prodi: dosen?.id_prodi || '',
+    nama: dosen?.nama || '',
+    email: dosen?.email || '',
+    no_telepon: dosen?.no_telepon || '',
+    alamat: dosen?.alamat || '',
+    pendidikan_terakhir: dosen?.pendidikan_terakhir || '',
+    jabatan_fungsional: dosen?.jabatan_fungsional || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -396,16 +349,16 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
     setIsSubmitting(true);
 
     try {
-      if (mahasiswa) {
-        await mahasiswaService.update(mahasiswa.nim, formData);
-        toast.success('Mahasiswa updated successfully');
+      if (dosen) {
+        await dosenService.update(dosen.id_dosen, formData);
+        toast.success('Dosen updated successfully');
       } else {
-        await mahasiswaService.create(formData);
-        toast.success('Mahasiswa created successfully');
+        await dosenService.create(formData);
+        toast.success('Dosen created successfully');
       }
       onClose();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to save mahasiswa');
+      toast.error(error.response?.data?.message || 'Failed to save dosen');
     } finally {
       setIsSubmitting(false);
     }
@@ -416,7 +369,7 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {mahasiswa ? 'Edit Mahasiswa' : 'Add New Mahasiswa'}
+            {dosen ? 'Edit Dosen' : 'Add New Dosen'}
           </h2>
         </div>
 
@@ -424,16 +377,16 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                NIM <span className="text-red-500">*</span>
+                NIDN <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                value={formData.nim}
-                onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
+                value={formData.nidn}
+                onChange={(e) => setFormData({ ...formData, nidn: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="e.g., 2023010001"
+                placeholder="e.g., 0123456789"
                 required
-                disabled={!!mahasiswa}
+                disabled={!!dosen}
               />
             </div>
 
@@ -486,52 +439,6 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Kurikulum <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.id_kurikulum}
-                onChange={(e) => setFormData({ ...formData, id_kurikulum: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              >
-                <option value="0">Select Kurikulum</option>
-                {kurikulums.map((k) => (
-                  <option key={k.id_kurikulum} value={k.id_kurikulum}>
-                    {k.kode_kurikulum} - {k.nama_kurikulum} ({k.tahun_berlaku})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Angkatan <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={formData.angkatan}
-                onChange={(e) => setFormData({ ...formData, angkatan: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Gender
-              </label>
-              <select
-                value={formData.jenis_kelamin}
-                onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value as 'L' | 'P' })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Phone Number
               </label>
               <input
@@ -541,6 +448,39 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="08xxxxxxxxxx"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Pendidikan Terakhir
+              </label>
+              <select
+                value={formData.pendidikan_terakhir}
+                onChange={(e) => setFormData({ ...formData, pendidikan_terakhir: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select</option>
+                <option value="S1">S1</option>
+                <option value="S2">S2</option>
+                <option value="S3">S3</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Jabatan Fungsional
+              </label>
+              <select
+                value={formData.jabatan_fungsional}
+                onChange={(e) => setFormData({ ...formData, jabatan_fungsional: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select</option>
+                <option value="Asisten Ahli">Asisten Ahli</option>
+                <option value="Lektor">Lektor</option>
+                <option value="Lektor Kepala">Lektor Kepala</option>
+                <option value="Guru Besar">Guru Besar</option>
+              </select>
             </div>
           </div>
 
@@ -571,7 +511,7 @@ const MahasiswaFormModal: React.FC<MahasiswaFormModalProps> = ({ mahasiswa, prod
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : mahasiswa ? 'Update Mahasiswa' : 'Create Mahasiswa'}
+              {isSubmitting ? 'Saving...' : dosen ? 'Update Dosen' : 'Create Dosen'}
             </button>
           </div>
         </form>

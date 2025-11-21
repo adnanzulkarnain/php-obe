@@ -51,7 +51,7 @@ export const CPLList: React.FC = () => {
       const response = await cplService.getAll({
         id_kurikulum: selectedKurikulum || undefined
       });
-      if (response.data) {
+      if (response.data && Array.isArray(response.data)) {
         setCpls(response.data);
       }
     } catch (error: any) {
@@ -270,7 +270,14 @@ export const CPLList: React.FC = () => {
         />
       )}
 
-      <ConfirmDialog isOpen={isOpen} config={config} onClose={closeDialog} />
+      {isOpen && (
+        <ConfirmDialog
+          {...config}
+          isOpen={isOpen}
+          onConfirm={() => {}}
+          onCancel={closeDialog}
+        />
+      )}
     </div>
   );
 };
