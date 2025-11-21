@@ -83,6 +83,7 @@ interface SkeletonLoaderProps {
   rows?: number;
   columns?: number;
   items?: number;
+  className?: string;
 }
 
 export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
@@ -90,6 +91,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   rows,
   columns,
   items,
+  className,
 }) => {
   switch (variant) {
     case 'card':
@@ -99,6 +101,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     case 'list':
       return <SkeletonList items={items} />;
     default:
-      return <Skeleton className="h-4 w-full" />;
+      return <Skeleton className={className || "h-4 w-full"} />;
   }
 };

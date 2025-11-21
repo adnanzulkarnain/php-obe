@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 import { dosenService, type Dosen } from '../../services/dosen.service';
 import { prodiService, type Prodi } from '../../services/prodi.service';
 import { toast } from 'react-toastify';
-import { FiPlus, FiEdit, FiTrash2, FiFilter, FiUsers, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiUsers, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { ConfirmDialog, useConfirmDialog } from '../../components/ConfirmDialog';
+import { AdvancedFilter } from '../../components/AdvancedFilter';
 
 export const DosenList: React.FC = () => {
   const [dosens, setDosens] = useState<Dosen[]>([]);
   const [prodis, setProdis] = useState<Prodi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterProdi, setFilterProdi] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filters, setFilters] = useState<Record<string, any>>({});
   const [showForm, setShowForm] = useState(false);
   const [editingDosen, setEditingDosen] = useState<Dosen | null>(null);
   const { isOpen, config, confirm, closeDialog } = useConfirmDialog();
@@ -23,7 +23,7 @@ export const DosenList: React.FC = () => {
 
   useEffect(() => {
     loadDosens();
-  }, [filterProdi, filterStatus]);
+  }, [filters]);
 
   const loadProdis = async () => {
     try {
@@ -41,12 +41,22 @@ export const DosenList: React.FC = () => {
     try {
       setIsLoading(true);
       const params: any = {};
-      if (filterProdi) params.id_prodi = filterProdi;
-      if (filterStatus) params.status = filterStatus;
+      if (filters.id_prodi) params.id_prodi = filters.id_prodi;
+      if (filters.status) params.status = filters.status;
 
       const response = await dosenService.getAll(params);
       if (response.data && Array.isArray(response.data)) {
-        setDosens(response.data);
+        // Apply search filter if exists
+        let filteredData: Dosen[] = response.data;
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredData = response.data.filter((d: Dosen) =>
+            d.nama.toLowerCase().includes(searchLower) ||
+            d.nidn.toLowerCase().includes(searchLower) ||
+            d.email?.toLowerCase().includes(searchLower)
+          );
+        }
+        setDosens(filteredData);
       }
     } catch (error: any) {
       toast.error('Failed to load dosen');
@@ -132,47 +142,31 @@ export const DosenList: React.FC = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="flex items-start gap-4">
-          <FiFilter className="text-gray-500 dark:text-gray-400 mt-2" />
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Program Studi
-              </label>
-              <select
-                value={filterProdi}
-                onChange={(e) => setFilterProdi(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">All Prodi</option>
-                {prodis.map((p) => (
-                  <option key={p.id_prodi} value={p.id_prodi}>
-                    {p.nama_prodi} ({p.jenjang})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
-              </label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">All Status</option>
-                <option value="aktif">Aktif</option>
-                <option value="cuti">Cuti</option>
-                <option value="pensiun">Pensiun</option>
-                <option value="non_aktif">Non-Aktif</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdvancedFilter
+        fields={[
+          {
+            name: 'id_prodi',
+            label: 'Program Studi',
+            type: 'select',
+            options: prodis.map((p) => ({
+              value: p.id_prodi,
+              label: `${p.nama_prodi} (${p.jenjang})`,
+            })),
+          },
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+              { value: 'aktif', label: 'Aktif' },
+              { value: 'cuti', label: 'Cuti' },
+              { value: 'pensiun', label: 'Pensiun' },
+              { value: 'non_aktif', label: 'Non-Aktif' },
+            ],
+          },
+        ]}
+        onFilterChange={setFilters}
+      />
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

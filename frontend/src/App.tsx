@@ -19,7 +19,11 @@ const CPMKList = lazy(() => import('./pages/CPMK').then(m => ({ default: m.CPMKL
 const MahasiswaList = lazy(() => import('./pages/Mahasiswa').then(m => ({ default: m.MahasiswaList })));
 const DosenList = lazy(() => import('./pages/Dosen').then(m => ({ default: m.DosenList })));
 const RPSList = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSList })));
+const RPSApprovalPage = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSApprovalPage })));
 const PenilaianList = lazy(() => import('./pages/Penilaian').then(m => ({ default: m.PenilaianList })));
+const KelasList = lazy(() => import('./pages/Kelas').then(m => ({ default: m.KelasList })));
+const KRSPage = lazy(() => import('./pages/Enrollment').then(m => ({ default: m.KRSPage })));
+const AnalyticsDashboard = lazy(() => import('./pages/Analytics').then(m => ({ default: m.AnalyticsDashboard })));
 const NotificationList = lazy(() => import('./pages/Notifications/NotificationList').then(m => ({ default: m.NotificationList })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -106,6 +110,14 @@ function App() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="rps/approval"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <RPSApprovalPage />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     {/* Penilaian Routes */}
                     <Route
@@ -133,6 +145,36 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
                           <DosenList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Kelas Routes */}
+                    <Route
+                      path="kelas"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
+                          <KelasList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* KRS/Enrollment Routes */}
+                    <Route
+                      path="krs"
+                      element={
+                        <ProtectedRoute allowedRoles={['mahasiswa', 'admin']}>
+                          <KRSPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Analytics Routes */}
+                    <Route
+                      path="analytics"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <AnalyticsDashboard />
                         </ProtectedRoute>
                       }
                     />

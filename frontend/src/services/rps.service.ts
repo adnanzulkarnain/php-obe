@@ -67,6 +67,16 @@ export const rpsService = {
     return api.get<ApiResponse<RPS[]>>('/rps/pending-approvals');
   },
 
+  // Process approval (approve/reject)
+  processApproval: (idApproval: number, action: 'approve' | 'reject', catatan?: string) => {
+    return api.post<ApiResponse<any>>(`/rps/approval/${idApproval}`, { action, catatan });
+  },
+
+  // Get RPS versions
+  getVersions: (idRps: number) => {
+    return api.get<ApiResponse<any[]>>(`/rps/${idRps}/versions`);
+  },
+
   // Get statistics
   getStatistics: () => {
     return api.get<ApiResponse<any>>('/rps/statistics');

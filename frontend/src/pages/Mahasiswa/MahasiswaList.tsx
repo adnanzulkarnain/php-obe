@@ -4,18 +4,17 @@ import { prodiService, type Prodi } from '../../services/prodi.service';
 import { kurikulumService } from '../../services/kurikulum.service';
 import type { Kurikulum } from '../../types/api';
 import { toast } from 'react-toastify';
-import { FiPlus, FiEdit, FiTrash2, FiFilter, FiUsers, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiUsers, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import { SkeletonLoader } from '../../components/SkeletonLoader';
 import { ConfirmDialog, useConfirmDialog } from '../../components/ConfirmDialog';
+import { AdvancedFilter } from '../../components/AdvancedFilter';
 
 export const MahasiswaList: React.FC = () => {
   const [mahasiswas, setMahasiswas] = useState<Mahasiswa[]>([]);
   const [prodis, setProdis] = useState<Prodi[]>([]);
   const [kurikulums, setKurikulums] = useState<Kurikulum[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filterProdi, setFilterProdi] = useState<string>('');
-  const [filterAngkatan, setFilterAngkatan] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filters, setFilters] = useState<Record<string, any>>({});
   const [showForm, setShowForm] = useState(false);
   const [editingMahasiswa, setEditingMahasiswa] = useState<Mahasiswa | null>(null);
   const { isOpen, config, confirm, closeDialog } = useConfirmDialog();
@@ -28,7 +27,7 @@ export const MahasiswaList: React.FC = () => {
 
   useEffect(() => {
     loadMahasiswas();
-  }, [filterProdi, filterAngkatan, filterStatus]);
+  }, [filters]);
 
   const loadProdis = async () => {
     try {
@@ -58,13 +57,23 @@ export const MahasiswaList: React.FC = () => {
     try {
       setIsLoading(true);
       const params: any = {};
-      if (filterProdi) params.id_prodi = filterProdi;
-      if (filterAngkatan) params.angkatan = parseInt(filterAngkatan);
-      if (filterStatus) params.status = filterStatus;
+      if (filters.id_prodi) params.id_prodi = filters.id_prodi;
+      if (filters.angkatan) params.angkatan = parseInt(filters.angkatan);
+      if (filters.status) params.status = filters.status;
 
       const response = await mahasiswaService.getAll(params);
       if (response.data && Array.isArray(response.data)) {
-        setMahasiswas(response.data);
+        // Apply search filter if exists
+        let filteredData: Mahasiswa[] = response.data;
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredData = response.data.filter((m: Mahasiswa) =>
+            m.nama.toLowerCase().includes(searchLower) ||
+            m.nim.toLowerCase().includes(searchLower) ||
+            m.email?.toLowerCase().includes(searchLower)
+          );
+        }
+        setMahasiswas(filteredData);
       }
     } catch (error: any) {
       toast.error('Failed to load mahasiswa');
@@ -161,62 +170,39 @@ export const MahasiswaList: React.FC = () => {
         </button>
       </div>
 
-      {/* Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="flex items-start gap-4">
-          <FiFilter className="text-gray-500 dark:text-gray-400 mt-2" />
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Program Studi
-              </label>
-              <select
-                value={filterProdi}
-                onChange={(e) => setFilterProdi(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">All Prodi</option>
-                {prodis.map((p) => (
-                  <option key={p.id_prodi} value={p.id_prodi}>
-                    {p.nama_prodi} ({p.jenjang})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Angkatan
-              </label>
-              <input
-                type="number"
-                value={filterAngkatan}
-                onChange={(e) => setFilterAngkatan(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="e.g., 2023"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Status
-              </label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="">All Status</option>
-                <option value="aktif">Aktif</option>
-                <option value="cuti">Cuti</option>
-                <option value="lulus">Lulus</option>
-                <option value="keluar">Keluar</option>
-                <option value="non_aktif">Non-Aktif</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Advanced Filter */}
+      <AdvancedFilter
+        fields={[
+          {
+            name: 'id_prodi',
+            label: 'Program Studi',
+            type: 'select',
+            options: prodis.map((p) => ({
+              value: p.id_prodi,
+              label: `${p.nama_prodi} (${p.jenjang})`,
+            })),
+          },
+          {
+            name: 'angkatan',
+            label: 'Angkatan',
+            type: 'number',
+            placeholder: 'e.g., 2023',
+          },
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+              { value: 'aktif', label: 'Aktif' },
+              { value: 'cuti', label: 'Cuti' },
+              { value: 'lulus', label: 'Lulus' },
+              { value: 'keluar', label: 'Keluar' },
+              { value: 'non_aktif', label: 'Non-Aktif' },
+            ],
+          },
+        ]}
+        onFilterChange={setFilters}
+      />
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
