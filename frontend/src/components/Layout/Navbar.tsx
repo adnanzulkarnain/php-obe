@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBell, FiUser, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiBell, FiUser, FiLogOut, FiSettings, FiSun, FiMoon, FiMenu } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { notificationService } from '../../services/notification.service';
 import type { Notification } from '../../types/api';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -82,11 +88,20 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+          <div className="flex items-center space-x-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={onMenuClick}
+              className="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              <FiMenu className="text-xl" />
+            </button>
+
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
               {user?.role === 'admin' && 'Admin Dashboard'}
               {user?.role === 'kaprodi' && 'Kaprodi Dashboard'}
               {user?.role === 'dosen' && 'Dosen Dashboard'}
@@ -94,12 +109,27 @@ export const Navbar: React.FC = () => {
             </h2>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <FiSun className="text-xl" />
+              ) : (
+                <FiMoon className="text-xl" />
+              )}
+            </button>
+
             {/* Notifications */}
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label="Notifications"
               >
                 <FiBell className="text-xl" />
                 {unreadCount > 0 && (
@@ -110,33 +140,33 @@ export const Navbar: React.FC = () => {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="p-4 border-b border-gray-200">
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</h3>
                       {unreadCount > 0 && (
-                        <span className="text-xs text-gray-500">{unreadCount} unread</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{unreadCount} unread</span>
                       )}
                     </div>
                   </div>
 
                   <div className="max-h-96 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500 text-sm">
+                      <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
                         No new notifications
                       </div>
                     ) : (
                       notifications.map((notification) => (
                         <div
                           key={notification.id_notification}
-                          className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                          className="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                           onClick={() => handleMarkAsRead(notification.id_notification)}
                         >
-                          <h4 className="text-sm font-medium text-gray-900">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                             {notification.judul}
                           </h4>
-                          <p className="text-xs text-gray-600 mt-1">{notification.pesan}</p>
-                          <p className="text-xs text-gray-400 mt-2">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{notification.pesan}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                             {new Date(notification.created_at).toLocaleString()}
                           </p>
                         </div>
@@ -144,10 +174,10 @@ export const Navbar: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="p-3 border-t border-gray-200">
+                  <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                     <Link
                       to="/notifications"
-                      className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
                       onClick={() => setShowNotifications(false)}
                     >
                       View all notifications
@@ -161,24 +191,25 @@ export const Navbar: React.FC = () => {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label="User menu"
               >
-                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">
                     {user?.nama?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900">{user?.nama || user?.username}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                <div className="text-left hidden sm:block">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.nama || user?.username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
                 </div>
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <FiUser className="mr-3" />
@@ -186,7 +217,7 @@ export const Navbar: React.FC = () => {
                   </Link>
                   <Link
                     to="/settings"
-                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <FiSettings className="mr-3" />
@@ -194,7 +225,7 @@ export const Navbar: React.FC = () => {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-gray-50 border-t border-gray-200"
+                    className="flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-200 dark:border-gray-700 transition-colors"
                   >
                     <FiLogOut className="mr-3" />
                     Logout
