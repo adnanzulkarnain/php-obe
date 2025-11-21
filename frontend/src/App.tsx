@@ -14,6 +14,9 @@ import { MainLayout } from './components/Layout/MainLayout';
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const KurikulumList = lazy(() => import('./pages/Kurikulum/KurikulumList').then(m => ({ default: m.KurikulumList })));
+const CPLList = lazy(() => import('./pages/CPL').then(m => ({ default: m.CPLList })));
+const CPMKList = lazy(() => import('./pages/CPMK').then(m => ({ default: m.CPMKList })));
+const MahasiswaList = lazy(() => import('./pages/Mahasiswa').then(m => ({ default: m.MahasiswaList })));
 const NotificationList = lazy(() => import('./pages/Notifications/NotificationList').then(m => ({ default: m.NotificationList })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -67,6 +70,36 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
                           <KurikulumList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* CPL Routes */}
+                    <Route
+                      path="cpl"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
+                          <CPLList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* CPMK Routes */}
+                    <Route
+                      path="cpmk"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
+                          <CPMKList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Mahasiswa Routes */}
+                    <Route
+                      path="mahasiswa"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
+                          <MahasiswaList />
                         </ProtectedRoute>
                       }
                     />
