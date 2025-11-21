@@ -9,6 +9,8 @@ import {
   FiBell,
   FiFileText,
   FiX,
+  FiGrid,
+  FiCalendar,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -25,6 +27,8 @@ const menuItems: MenuItem[] = [
   { name: 'CPL', path: '/cpl', icon: <FiBookOpen />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'CPMK', path: '/cpmk', icon: <FiClipboard />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'RPS', path: '/rps', icon: <FiFileText />, roles: ['admin', 'kaprodi', 'dosen'] },
+  { name: 'Kelas', path: '/kelas', icon: <FiGrid />, roles: ['admin', 'kaprodi', 'dosen'] },
+  { name: 'KRS', path: '/krs', icon: <FiCalendar />, roles: ['mahasiswa', 'admin'] },
   { name: 'Penilaian', path: '/penilaian', icon: <FiBarChart2 />, roles: ['admin', 'dosen'] },
   { name: 'Mahasiswa', path: '/mahasiswa', icon: <FiUsers />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'Dosen', path: '/dosen', icon: <FiUsers />, roles: ['admin', 'kaprodi'] },
