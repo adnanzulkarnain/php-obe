@@ -22,6 +22,7 @@ const RPSList = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSList
 const PenilaianList = lazy(() => import('./pages/Penilaian').then(m => ({ default: m.PenilaianList })));
 const KelasList = lazy(() => import('./pages/Kelas').then(m => ({ default: m.KelasList })));
 const KRSPage = lazy(() => import('./pages/Enrollment').then(m => ({ default: m.KRSPage })));
+const AnalyticsDashboard = lazy(() => import('./pages/Analytics').then(m => ({ default: m.AnalyticsDashboard })));
 const NotificationList = lazy(() => import('./pages/Notifications/NotificationList').then(m => ({ default: m.NotificationList })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -155,6 +156,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['mahasiswa', 'admin']}>
                           <KRSPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Analytics Routes */}
+                    <Route
+                      path="analytics"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <AnalyticsDashboard />
                         </ProtectedRoute>
                       }
                     />
