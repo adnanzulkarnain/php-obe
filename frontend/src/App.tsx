@@ -18,6 +18,8 @@ const CPLList = lazy(() => import('./pages/CPL').then(m => ({ default: m.CPLList
 const CPMKList = lazy(() => import('./pages/CPMK').then(m => ({ default: m.CPMKList })));
 const MahasiswaList = lazy(() => import('./pages/Mahasiswa').then(m => ({ default: m.MahasiswaList })));
 const DosenList = lazy(() => import('./pages/Dosen').then(m => ({ default: m.DosenList })));
+const RPSList = lazy(() => import('./pages/RPS').then(m => ({ default: m.RPSList })));
+const PenilaianList = lazy(() => import('./pages/Penilaian').then(m => ({ default: m.PenilaianList })));
 const NotificationList = lazy(() => import('./pages/Notifications/NotificationList').then(m => ({ default: m.NotificationList })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
@@ -91,6 +93,26 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
                           <CPMKList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* RPS Routes */}
+                    <Route
+                      path="rps"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
+                          <RPSList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Penilaian Routes */}
+                    <Route
+                      path="penilaian"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'dosen']}>
+                          <PenilaianList />
                         </ProtectedRoute>
                       }
                     />
