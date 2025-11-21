@@ -49,6 +49,7 @@
 - ✅ **Security Headers** - CSP, HSTS, X-Frame-Options
 - ✅ **Request Logging** - Performance monitoring
 - ✅ **Health Check** - System monitoring endpoints
+- ✅ **Database Seeding** - Comprehensive sample data for testing & demo
 
 ### Frontend Features (100% Complete)
 
@@ -203,11 +204,11 @@ createdb obe_system
 # 6. Import schema
 psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
-# 7. Run migrations
+# 7. Run migrations (if any)
 php migrate.php migrate
 
-# 8. Seed sample data (optional)
-php migrate.php seed
+# 8. Seed comprehensive sample data
+php database/seed.php
 
 # 9. Set permissions
 chmod -R 755 storage logs
@@ -239,20 +240,134 @@ npm run build
 # Output: frontend/dist/
 ```
 
+## 📊 Database Seeding
+
+The system includes a comprehensive database seeder that populates sample data demonstrating the complete OBE workflow.
+
+### What Gets Seeded
+
+```
+Master Data:
+  ├─ 3 Fakultas (FTI, FEB, FT)
+  ├─ 3 Program Studi (TIF, SI, Manajemen)
+  ├─ 6 Dosen (with teaching assignments)
+  └─ 4 Roles (admin, kaprodi, dosen, mahasiswa)
+
+Curriculum Data:
+  ├─ 3 Kurikulum (K2024 active, K2020 archived)
+  ├─ 9 CPL (Graduate Learning Outcomes)
+  │   ├─ Sikap (2)
+  │   ├─ Pengetahuan (2)
+  │   ├─ Keterampilan Umum (2)
+  │   └─ Keterampilan Khusus (3)
+  ├─ 10 Mata Kuliah (with prerequisites)
+  └─ 6 Prasyarat relationships
+
+Learning Plans:
+  ├─ 3 RPS (approved status)
+  ├─ 12 CPMK (Course Learning Outcomes)
+  ├─ 3 SubCPMK (with indicators)
+  ├─ CPMK-CPL Relations (with contribution weights)
+  ├─ 10 Rencana Mingguan (weekly plans with JSONB data)
+  └─ 4 Pustaka (reference books)
+
+Classes & Students:
+  ├─ 6 Kelas (2 classes per course: A, B)
+  ├─ 50 Mahasiswa (NIM: 202401001 - 202401050)
+  ├─ 100+ Enrollment records
+  └─ 10 Teaching assignments
+
+Assessment System:
+  ├─ 6 Jenis Penilaian (Quiz, Tugas, UTS, UAS, etc)
+  ├─ Template Penilaian (per CPMK with weights)
+  ├─ Komponen Penilaian (actual components per class)
+  ├─ 100+ Nilai Detail (student grades with auto calculation)
+  ├─ 200+ Ketercapaian CPMK (CPMK achievement tracking)
+  └─ Ambang Batas (pass thresholds)
+```
+
+### Running the Seeder
+
+```bash
+# Make sure .env is configured and database schema is imported
+php database/seed.php
+
+# Output will show progress with emojis:
+# 📝 Seeding roles...
+# 🏛️  Seeding fakultas...
+# 🎓 Seeding prodi...
+# 👨‍🏫 Seeding dosen...
+# ... (and more)
+```
+
+### Seeder Features
+
+- ✅ **Transaction-safe**: Automatic rollback on error
+- ✅ **Idempotent**: Uses `ON CONFLICT DO NOTHING` - safe to run multiple times
+- ✅ **Comprehensive**: Full OBE workflow from curriculum to assessment
+- ✅ **Realistic data**: Proper relationships and realistic values
+- ✅ **Error handling**: Clear error messages with stack trace
+- ✅ **Summary report**: Shows count of records created per table
+
+### Sample Data Flow
+
+The seeded data demonstrates this workflow:
+
+```
+1. Curriculum Setup
+   Faculty → Program → Curriculum → CPL → Courses
+
+2. Learning Planning
+   RPS → CPMK → SubCPMK
+   CPMK ←→ CPL (with contribution weights)
+
+3. Class Management
+   Classes created from RPS
+   Lecturers assigned to classes
+   Students enrolled in classes
+
+4. Assessment System
+   Assessment templates per CPMK
+   Actual components per class
+   Student grades recorded
+   CPMK achievement calculated
+   CPL achievement derived from CPMK
+```
+
+### Resetting Data
+
+To reset and reseed the database:
+
+```bash
+# 1. Re-import schema (drops all data)
+psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+
+# 2. Run seeder again
+php database/seed.php
+```
+
+For more details, see [database/README.md](database/README.md)
+
 ## 🎯 Usage
 
 ### Demo Credentials
 
+After running the database seeder (`php database/seed.php`), use these credentials:
+
 ```
-┌──────────┬──────────┬──────────────┐
-│ Role     │ Username │ Password     │
-├──────────┼──────────┼──────────────┤
-│ Admin    │ admin    │ admin123     │
-│ Kaprodi  │ kaprodi  │ kaprodi123   │
-│ Dosen    │ dosen    │ dosen123     │
-│ Mahasiswa│ mahasiswa│ mahasiswa123 │
-└──────────┴──────────┴──────────────┘
+┌──────────┬──────────────┬──────────────┐
+│ Role     │ Username     │ Password     │
+├──────────┼──────────────┼──────────────┤
+│ Admin    │ admin        │ admin123     │
+│ Kaprodi  │ kaprodi_tif  │ kaprodi123   │
+│ Dosen    │ dosen1       │ dosen123     │
+│ Dosen    │ dosen2       │ dosen123     │
+│ Mahasiswa│ 202401001    │ mhs123       │
+│ Mahasiswa│ 202401002    │ mhs123       │
+└──────────┴──────────────┴──────────────┘
 ```
+
+**Note**: The seeder creates 50 students (202401001 - 202401050) and 6 lecturers with complete enrollment and assessment data.
 
 ### Access Points
 
@@ -601,7 +716,10 @@ php-obe/
 │
 ├── database/                 # Database Files
 │   ├── migrations/           # Migration Files
-│   └── seeders/              # Seed Data
+│   ├── seeders/              # Seed Data Classes
+│   │   └── DatabaseSeeder.php  # Comprehensive seeder
+│   ├── seed.php              # Seeder runner script
+│   └── README.md             # Database documentation
 │
 ├── public/                   # Web Root
 │   ├── index.php            # Entry Point
