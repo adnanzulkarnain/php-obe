@@ -11,6 +11,7 @@
 ## 📋 Table of Contents
 
 - [Features](#-features)
+- [Application Flow](#-application-flow)
 - [Tech Stack](#-tech-stack)
 - [Screenshots](#-screenshots)
 - [Installation](#-installation)
@@ -89,6 +90,722 @@
 - **Build Time**: ~2 seconds
 - **Lazy Loading**: All pages loaded on-demand
 - **Caching**: React Query with 5-minute staleTime
+
+## 🔄 Application Flow
+
+### System Overview
+
+OBE System adalah aplikasi manajemen kurikulum berbasis **Outcome-Based Education (OBE)** yang mengikuti standar DIKTI untuk perguruan tinggi di Indonesia. Sistem ini mengelola alur lengkap dari perencanaan kurikulum hingga penilaian mahasiswa dengan tracking capaian pembelajaran.
+
+### Core Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    OBE SYSTEM - COMPLETE WORKFLOW                    │
+└─────────────────────────────────────────────────────────────────────┘
+
+1. PERENCANAAN KURIKULUM (Curriculum Planning)
+   ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+   │  Kurikulum  │ ───▶ │     CPL     │ ───▶ │ Mata Kuliah │
+   │   (K2024)   │      │  (9 items)  │      │  (courses)  │
+   └─────────────┘      └─────────────┘      └─────────────┘
+        │                     │                      │
+        └─────────────────────┴──────────────────────┘
+                              ▼
+                    ┌──────────────────┐
+                    │ Approval Workflow│
+                    │  DRAFT → REVIEW  │
+                    │  → APPROVED      │
+                    │  → AKTIF         │
+                    └──────────────────┘
+
+2. PERENCANAAN PEMBELAJARAN (Learning Planning)
+   ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+   │     RPS     │ ───▶ │    CPMK     │ ───▶ │  SubCPMK    │
+   │  (Wizard)   │      │  + Mapping  │      │ + Indikator │
+   └─────────────┘      └─────────────┘      └─────────────┘
+        │                     │                      │
+        └─────────────────────┴──────────────────────┘
+                              ▼
+                    ┌──────────────────┐
+                    │  Rencana Mingguan│
+                    │  (16 pertemuan)  │
+                    └──────────────────┘
+
+3. PELAKSANAAN (Execution)
+   ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+   │    Kelas    │ ───▶ │   Dosen     │      │  Mahasiswa  │
+   │  (A, B, C)  │      │  Assignment │      │ Enrollment  │
+   └─────────────┘      └─────────────┘      └─────────────┘
+        │                     │                      │
+        └─────────────────────┴──────────────────────┘
+                              ▼
+                    ┌──────────────────┐
+                    │  Teaching & KRS  │
+                    │   Management     │
+                    └──────────────────┘
+
+4. PENILAIAN (Assessment)
+   ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+   │  Template   │ ───▶ │Input Nilai  │ ───▶ │ Achievement │
+   │  Penilaian  │      │ (Quiz, UTS) │      │ CPMK → CPL  │
+   └─────────────┘      └─────────────┘      └─────────────┘
+```
+
+---
+
+### User Flows by Role
+
+#### 1️⃣ Admin / Kaprodi - Kelola Kurikulum
+
+```
+START: Login sebagai Kaprodi/Admin
+   │
+   ├─▶ [Dashboard] Lihat statistik kurikulum
+   │
+   ├─▶ [Buat Kurikulum Baru]
+   │    ├─ Input: Kode (K2024), Nama, Tahun, Deskripsi
+   │    ├─ Status: DRAFT
+   │    └─ Dapat diedit/dihapus selama masih DRAFT
+   │
+   ├─▶ [Definisikan CPL] (Capaian Pembelajaran Lulusan)
+   │    ├─ Tambah CPL dengan kategori:
+   │    │  ├─ Sikap (S1, S2, ...)
+   │    │  ├─ Pengetahuan (P1, P2, ...)
+   │    │  ├─ Keterampilan Umum (KU1, KU2, ...)
+   │    │  └─ Keterampilan Khusus (KK1, KK2, ...)
+   │    └─ Akan dipetakan ke CPMK nantinya
+   │
+   ├─▶ [Tambah Mata Kuliah]
+   │    ├─ Input: Kode MK, Nama, SKS, Semester
+   │    ├─ Set prasyarat (jika ada)
+   │    └─ Link ke kurikulum aktif
+   │
+   ├─▶ [Submit untuk Approval]
+   │    ├─ Ubah status: DRAFT → REVIEW
+   │    ├─ Generate nomor SK (Surat Keputusan)
+   │    └─ Kirim notifikasi ke approver
+   │
+   ├─▶ [Approve Kurikulum] (oleh Admin/Kaprodi lain)
+   │    ├─ Review struktur kurikulum
+   │    ├─ Validasi kelengkapan CPL & MK
+   │    ├─ Approve: REVIEW → APPROVED
+   │    └─ Activate: APPROVED → AKTIF
+   │
+   └─▶ [Monitoring]
+        ├─ Lihat RPS yang dibuat dari kurikulum ini
+        ├─ Track jumlah mahasiswa terdaftar
+        └─ Analisis pencapaian CPL
+
+END: Kurikulum aktif dan siap digunakan
+```
+
+#### 2️⃣ Dosen - Buat RPS & Input Nilai
+
+```
+START: Login sebagai Dosen
+   │
+   ├─▶ [Dashboard] Lihat mata kuliah yang diampu
+   │
+   ├─▶ [Buat RPS dengan Wizard] (4 Langkah)
+   │    │
+   │    ├─ Step 1: Informasi Dasar
+   │    │   ├─ Pilih Kurikulum (auto-filter)
+   │    │   ├─ Pilih Mata Kuliah dari kurikulum
+   │    │   ├─ Set semester (Ganjil/Genap)
+   │    │   ├─ Set tahun ajaran (2024/2025)
+   │    │   ├─ Pilih ketua pengembang
+   │    │   └─ Set tanggal penyusunan
+   │    │
+   │    ├─ Step 2: Deskripsi Mata Kuliah
+   │    │   ├─ Deskripsi lengkap (min 20 karakter)
+   │    │   ├─ Ringkasan singkat (min 10 karakter)
+   │    │   └─ Validasi real-time character count
+   │    │
+   │    ├─ Step 3: Capaian Pembelajaran (CPMK)
+   │    │   ├─ Lihat CPL dari kurikulum terpilih
+   │    │   ├─ Tambah CPMK dengan kode & deskripsi
+   │    │   ├─ Buat SubCPMK dengan indikator
+   │    │   ├─ Petakan CPMK ke CPL (dengan bobot)
+   │    │   └─ Optional: dapat ditambah nanti
+   │    │
+   │    └─ Step 4: Review & Submit
+   │        ├─ Review semua info yang diinput
+   │        ├─ Verifikasi CPMK dan pemetaan
+   │        ├─ Submit sebagai DRAFT
+   │        └─ Dapat diedit sebelum submit approval
+   │
+   ├─▶ [Lengkapi RPS]
+   │    ├─ Tambah rencana mingguan (16 pertemuan)
+   │    ├─ Tambah pustaka/referensi
+   │    ├─ Definisikan template penilaian
+   │    └─ Submit untuk approval Kaprodi
+   │
+   ├─▶ [Kelola Kelas]
+   │    ├─ Lihat kelas yang diampu
+   │    ├─ Lihat daftar mahasiswa terdaftar
+   │    ├─ Input kehadiran per pertemuan
+   │    └─ Update realisasi pembelajaran
+   │
+   └─▶ [Input Nilai Mahasiswa]
+        ├─ Pilih kelas
+        ├─ Pilih komponen penilaian:
+        │  ├─ Quiz (10-20%)
+        │  ├─ Tugas (10-30%)
+        │  ├─ UTS (30%)
+        │  └─ UAS (30%)
+        ├─ Input nilai per mahasiswa
+        ├─ Sistem auto-calculate:
+        │  ├─ Total nilai (weighted)
+        │  ├─ Grade huruf (A-E)
+        │  └─ Pencapaian CPMK
+        └─ Lihat report ketercapaian CPMK
+
+END: Nilai tersimpan dan dapat dilihat mahasiswa
+```
+
+#### 3️⃣ Mahasiswa - Registrasi & Lihat Nilai
+
+```
+START: Login sebagai Mahasiswa
+   │
+   ├─▶ [Dashboard] Lihat overview akademik
+   │    ├─ IPK terkini
+   │    ├─ Total SKS lulus
+   │    └─ Kelas semester ini
+   │
+   ├─▶ [KRS - Kartu Rencana Studi]
+   │    │
+   │    ├─ Lihat kelas tersedia:
+   │    │  ├─ Filter by semester/kurikulum
+   │    │  ├─ Lihat kapasitas kelas
+   │    │  ├─ Lihat jadwal & dosen
+   │    │  └─ Check prasyarat
+   │    │
+   │    ├─ Pilih kelas untuk diambil
+   │    │
+   │    ├─ Validasi sistem:
+   │    │  ├─ Status kelas = OPEN
+   │    │  ├─ Kapasitas masih tersedia
+   │    │  ├─ Prasyarat terpenuhi
+   │    │  ├─ Total SKS: 12-24 per semester
+   │    │  └─ Tidak double enroll
+   │    │
+   │    ├─ Submit KRS
+   │    │  ├─ Status: AKTIF
+   │    │  └─ Notifikasi konfirmasi
+   │    │
+   │    └─ Dapat drop kelas (sebelum deadline)
+   │
+   ├─▶ [Lihat Kelas Aktif]
+   │    ├─ Jadwal perkuliahan
+   │    ├─ Materi per minggu
+   │    ├─ Tugas/assignment
+   │    └─ Kehadiran
+   │
+   ├─▶ [Lihat Nilai]
+   │    ├─ Nilai per komponen:
+   │    │  ├─ Quiz: 85
+   │    │  ├─ Tugas: 90
+   │    │  ├─ UTS: 88
+   │    │  └─ UAS: 86
+   │    │
+   │    ├─ Nilai akhir: 87.5 (A)
+   │    │
+   │    └─ Pencapaian CPMK:
+   │       ├─ CPMK1: 85% (Baik)
+   │       ├─ CPMK2: 90% (Sangat Baik)
+   │       └─ CPMK3: 88% (Baik)
+   │
+   └─▶ [Transkrip]
+        ├─ Daftar semua MK yang pernah diambil
+        ├─ Nilai per semester
+        ├─ IPK kumulatif
+        ├─ Total SKS lulus
+        └─ Export ke PDF
+
+END: Mahasiswa dapat track progress akademik
+```
+
+---
+
+### Data Flow Architecture
+
+#### Flow 1: Penilaian → Pencapaian CPMK → Pencapaian CPL
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                  ASSESSMENT TO ACHIEVEMENT FLOW                   │
+└──────────────────────────────────────────────────────────────────┘
+
+1. INPUT NILAI (Dosen)
+   ┌─────────────────────┐
+   │  Komponen Penilaian │
+   │  ├─ Quiz: 15%       │
+   │  ├─ Tugas: 20%      │
+   │  ├─ UTS: 30%        │
+   │  └─ UAS: 35%        │
+   └─────────────────────┘
+            │
+            ▼
+   ┌─────────────────────┐
+   │   Input per Mhs     │
+   │   Quiz: 85          │
+   │   Tugas: 90         │
+   │   UTS: 88           │
+   │   UAS: 86           │
+   └─────────────────────┘
+            │
+            ▼
+2. AUTO CALCULATION
+   ┌─────────────────────┐
+   │  Weighted Score:    │
+   │  (85×0.15) + ...    │
+   │  = 87.45            │
+   └─────────────────────┘
+            │
+            ▼
+   ┌─────────────────────┐
+   │  Letter Grade:      │
+   │  87.45 → A          │
+   │  (based on scale)   │
+   └─────────────────────┘
+            │
+            ▼
+3. PENCAPAIAN CPMK (per SubCPMK Indikator)
+   ┌─────────────────────┐
+   │  CPMK1 (Indikator1) │
+   │  Nilai: 87.45       │
+   │  Status: TERCAPAI   │
+   │  (threshold: 70)    │
+   └─────────────────────┘
+            │
+            ▼
+   ┌─────────────────────┐
+   │  Aggregate CPMK1:   │
+   │  All SubCPMK avg    │
+   │  = 88%              │
+   └─────────────────────┘
+            │
+            ▼
+4. PENCAPAIAN CPL (dari mapping CPMK→CPL)
+   ┌─────────────────────┐
+   │  Relasi CPMK-CPL:   │
+   │  CPMK1 → CPL1 (40%) │
+   │  CPMK1 → CPL2 (30%) │
+   │  CPMK1 → CPL5 (30%) │
+   └─────────────────────┘
+            │
+            ▼
+   ┌─────────────────────┐
+   │  CPL Achievement:   │
+   │  CPL1: 88 × 0.4     │
+   │        + (other)    │
+   │        = 85% total  │
+   └─────────────────────┘
+            │
+            ▼
+5. REPORTING
+   ┌─────────────────────┐
+   │  Dashboard Analytics│
+   │  ├─ Mahasiswa view  │
+   │  ├─ Dosen view      │
+   │  └─ Kaprodi view    │
+   └─────────────────────┘
+```
+
+#### Flow 2: RPS Approval Workflow
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                     RPS APPROVAL WORKFLOW                         │
+└──────────────────────────────────────────────────────────────────┘
+
+DOSEN                    KAPRODI                 SISTEM
+  │                         │                      │
+  ├─ Create RPS             │                      │
+  │  (via Wizard)           │                      │
+  │                         │                      │
+  ├─ Status: DRAFT ─────────────────────────────▶ │
+  │                         │                      │
+  │◀────────────────────────────────── Editable   │
+  │  Edit anytime           │                      │
+  │                         │                      │
+  ├─ Submit for Approval ───────────────────────▶ │
+  │                         │                      │
+  │                         │         Status: SUBMITTED
+  │                         │                      │
+  │                         │◀───── Notification   │
+  │                         │  (email + in-app)    │
+  │                         │                      │
+  │                    Review RPS                  │
+  │                    ├─ Check completeness       │
+  │                    ├─ Validate CPMK mapping   │
+  │                    └─ Check weekly plans      │
+  │                         │                      │
+  │                    Option 1: Approve           │
+  │                         ├─────────────────────▶│
+  │                         │         Status: APPROVED
+  │                         │                      │
+  │◀───────────────────────────────── Notification│
+  │  RPS Approved           │                      │
+  │                         │                      │
+  │                    Option 2: Reject            │
+  │                         ├─────────────────────▶│
+  │                         │  (with comments)     │
+  │                         │         Status: DRAFT
+  │                         │                      │
+  │◀───────────────────────────────── Notification│
+  │  RPS Rejected           │  (fix & resubmit)    │
+  │  (can edit again)       │                      │
+  │                         │                      │
+  ├─ After Approval:        │                      │
+  │  ├─ Create Kelas ───────────────────────────▶ │
+  │  ├─ Assign Dosen                               │
+  │  └─ Open enrollment                            │
+```
+
+#### Flow 3: Database Transaction Flow (Enrollment Example)
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                ENROLLMENT TRANSACTION FLOW                        │
+└──────────────────────────────────────────────────────────────────┘
+
+CLIENT (Frontend)
+   │
+   │ POST /api/enrollment
+   │ Body: { kelas_id, nim }
+   │
+   ▼
+CONTROLLER (EnrollmentController.php)
+   │
+   │ 1. Extract request data
+   │ 2. Validate input
+   │
+   ▼
+SERVICE (EnrollmentService.php)
+   │
+   ├─ BEGIN TRANSACTION ────────────────────┐
+   │                                         │
+   │ 3. Check validations:                   │
+   │    ├─ Student exists?                   │
+   │    ├─ Class exists & status = OPEN?     │
+   │    ├─ Class has capacity?               │
+   │    ├─ Prerequisites met?                │
+   │    ├─ Total SKS within limit?           │
+   │    └─ Not already enrolled?             │
+   │                                         │
+   │    If ANY validation fails:             │
+   │    └─ ROLLBACK ──────────────────▶ ERROR
+   │                                         │
+   │ 4. Insert into enrollment table         │
+   │    ├─ id_enrollment (UUID)              │
+   │    ├─ kelas_id                          │
+   │    ├─ nim                                │
+   │    ├─ status: 'AKTIF'                   │
+   │    └─ tanggal_daftar: NOW()             │
+   │                                         │
+   │ 5. Update class capacity count          │
+   │    UPDATE kelas                         │
+   │    SET current_capacity += 1            │
+   │                                         │
+   │ 6. Create notification                  │
+   │    INSERT INTO notifications            │
+   │    (type: 'enrollment_success')         │
+   │                                         │
+   │ 7. Log audit trail                      │
+   │    INSERT INTO audit_log                │
+   │                                         │
+   │ COMMIT TRANSACTION ─────────────────────┤
+   │                                         │
+   ▼                                         ▼
+RESPONSE                               DATABASE
+   │                                   (persisted)
+   │ 201 Created
+   │ { success, data, message }
+   │
+   ▼
+CLIENT
+   Display success message
+   Update UI (refetch enrollments)
+```
+
+---
+
+### Authentication & Authorization Flow
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                  AUTHENTICATION FLOW (JWT)                        │
+└──────────────────────────────────────────────────────────────────┘
+
+1. LOGIN
+   User submits: { username, password }
+        │
+        ▼
+   POST /api/auth/login
+        │
+        ├─ Find user in database
+        ├─ Verify password (BCrypt)
+        ├─ Check is_active status
+        │
+        ▼
+   Generate JWT Token:
+   ┌──────────────────────────┐
+   │ Header:                  │
+   │   alg: HS256              │
+   │   typ: JWT                │
+   ├──────────────────────────┤
+   │ Payload:                 │
+   │   id_user: 1             │
+   │   username: "admin"      │
+   │   user_type: "admin"     │
+   │   ref_id: "DSN001"       │
+   │   exp: timestamp+2h      │
+   ├──────────────────────────┤
+   │ Signature:               │
+   │   HMAC SHA256(           │
+   │     base64(header) +     │
+   │     base64(payload),     │
+   │     JWT_SECRET           │
+   │   )                      │
+   └──────────────────────────┘
+        │
+        ▼
+   Response:
+   {
+     token: "eyJhbGc...",
+     refresh_token: "xyz...",
+     user: { ... }
+   }
+        │
+        ▼
+   Store in localStorage
+
+2. PROTECTED REQUEST
+   User requests: GET /api/kurikulum
+        │
+        ▼
+   Add header: Authorization: Bearer eyJhbGc...
+        │
+        ▼
+   AuthMiddleware.php:
+   ├─ Extract token from header
+   ├─ Validate JWT signature
+   ├─ Check expiry
+   ├─ Decode payload
+   └─ Store user in $_SESSION['user']
+        │
+        ▼
+   Controller:
+   ├─ Check role: AuthMiddleware::requireRole('admin')
+   ├─ Get user: AuthMiddleware::user()
+   └─ Execute business logic
+
+3. AUTHORIZATION (Role-Based)
+   ┌─────────────────────────────────────────┐
+   │  Role          │  Permissions           │
+   ├────────────────┼────────────────────────┤
+   │  admin         │  Full access           │
+   │  kaprodi       │  Approve, Manage       │
+   │  dosen         │  Create RPS, Grade     │
+   │  mahasiswa     │  View, Enroll          │
+   └─────────────────────────────────────────┘
+```
+
+---
+
+### API Request/Response Flow
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              TYPICAL API REQUEST/RESPONSE CYCLE                   │
+└──────────────────────────────────────────────────────────────────┘
+
+CLIENT (React)
+   │
+   │ axios.get('/api/kurikulum')
+   │ headers: { Authorization: Bearer ... }
+   │
+   ▼
+NGINX/Apache (Web Server)
+   │
+   │ Route to: /public/index.php
+   │
+   ▼
+index.php (Entry Point)
+   │
+   ├─ Load .env
+   ├─ Initialize Router
+   ├─ Register ExceptionHandler
+   │
+   ▼
+Middleware Pipeline
+   │
+   ├─ SecurityHeadersMiddleware
+   │  └─ Add: CSP, HSTS, X-Frame-Options
+   │
+   ├─ CorsMiddleware
+   │  └─ Handle CORS preflight & headers
+   │
+   ├─ RateLimitMiddleware
+   │  ├─ Check IP request count
+   │  └─ Return 429 if exceeded
+   │
+   ├─ RequestLoggingMiddleware
+   │  └─ Log: method, path, IP, timestamp
+   │
+   └─ AuthMiddleware (for protected routes)
+      └─ Validate JWT token
+   │
+   ▼
+Router (routes.php)
+   │
+   │ Match route: GET /api/kurikulum
+   │ Handler: KurikulumController::index
+   │
+   ▼
+Controller (KurikulumController.php)
+   │
+   │ 1. Extract query params (filters)
+   │ 2. Call service
+   │
+   ▼
+Service (KurikulumService.php)
+   │
+   │ 3. Business logic
+   │ 4. Call repository
+   │
+   ▼
+Repository (KurikulumRepository.php)
+   │
+   │ 5. Build SQL query
+   │ 6. Execute via PDO
+   │
+   ▼
+Database (PostgreSQL)
+   │
+   │ 7. Return result set
+   │
+   ▼
+Repository
+   │
+   │ 8. Map to Entity objects
+   │ 9. Return to Service
+   │
+   ▼
+Service
+   │
+   │ 10. Apply business rules
+   │ 11. Format response
+   │ 12. Return to Controller
+   │
+   ▼
+Controller
+   │
+   │ 13. Format JSON response
+   │ 14. Set HTTP status code
+   │
+   ▼
+Response
+   {
+     "success": true,
+     "data": [...],
+     "meta": { "total": 10, "page": 1 }
+   }
+   │
+   ▼
+CLIENT
+   │
+   │ React Query caches response
+   │ Update UI components
+   └─ Display data
+```
+
+---
+
+### Key Technical Flows
+
+#### Database Connection Pool
+```
+Application Start
+   │
+   ├─ Database::getInstance()
+   │  ├─ Check if connection exists
+   │  │  ├─ Yes: Return existing PDO
+   │  │  └─ No: Create new PDO
+   │  │     ├─ Set persistent: true
+   │  │     ├─ Set error mode: EXCEPTION
+   │  │     └─ Set fetch mode: ASSOC
+   │  └─ Return PDO instance
+   │
+   └─ Reuse connection for all queries
+```
+
+#### File Upload Flow
+```
+Client uploads file
+   │
+   ▼
+POST /api/documents
+   │
+   ├─ Validate file:
+   │  ├─ Max size: 10MB
+   │  ├─ Allowed types: pdf, docx, xlsx, jpg, png
+   │  └─ Check MIME type
+   │
+   ├─ Generate unique filename:
+   │  └─ {timestamp}_{random}_{original}
+   │
+   ├─ Move to storage/uploads/
+   │
+   ├─ Save metadata to documents table:
+   │  ├─ filename
+   │  ├─ filepath
+   │  ├─ filesize
+   │  ├─ mime_type
+   │  └─ uploaded_by
+   │
+   └─ Return document_id
+```
+
+#### Export to Excel Flow
+```
+Request: GET /api/analytics/export
+   │
+   ├─ Fetch data from repository
+   │
+   ├─ Create PhpSpreadsheet object
+   │  ├─ Set headers (column names)
+   │  ├─ Populate rows with data
+   │  ├─ Apply styling (bold headers, borders)
+   │  └─ Set column widths
+   │
+   ├─ Generate filename: analytics_{timestamp}.xlsx
+   │
+   ├─ Save to storage/exports/
+   │
+   └─ Return download link or stream file
+```
+
+#### Notification Flow
+```
+Event triggered (e.g., RPS Approval)
+   │
+   ├─ NotificationService::create()
+   │  ├─ Insert into notifications table
+   │  ├─ Set: user_id, type, title, message
+   │  └─ Set: is_read = false
+   │
+   ├─ EmailHelper::send() (if email enabled)
+   │  ├─ Render email template
+   │  ├─ Send via SMTP
+   │  └─ Log email sent
+   │
+   └─ WebSocket push (if implemented)
+      └─ Real-time notification to frontend
+```
 
 ## 🚀 Tech Stack
 
