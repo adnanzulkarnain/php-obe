@@ -51,15 +51,65 @@ class CPMKRepository extends BaseRepository
 
     /**
      * Find all CPMK by RPS with SubCPMK
+     * Optimized to use single query with LEFT JOIN to avoid N+1 problem
      */
     public function findByRPSWithSubCPMK(int $idRps): array
     {
-        // Get all CPMK
-        $cpmkList = $this->findByRPS($idRps);
+        $sql = "
+            SELECT
+                c.*,
+                s.id_subcpmk,
+                s.kode_subcpmk,
+                s.deskripsi as subcpmk_deskripsi,
+                s.indikator as subcpmk_indikator,
+                s.urutan as subcpmk_urutan,
+                s.created_at as subcpmk_created_at,
+                s.updated_at as subcpmk_updated_at
+            FROM {$this->table} c
+            LEFT JOIN subcpmk s ON c.id_cpmk = s.id_cpmk
+            WHERE c.id_rps = :id_rps
+            ORDER BY c.urutan ASC, c.id_cpmk ASC, s.urutan ASC, s.id_subcpmk ASC
+        ";
 
-        // Get all SubCPMK for each CPMK
-        foreach ($cpmkList as &$cpmk) {
-            $cpmk['subcpmk'] = $this->getSubCPMKByCPMK($cpmk['id_cpmk']);
+        $rows = $this->query($sql, ['id_rps' => $idRps]);
+
+        // Group SubCPMK under their parent CPMK
+        $cpmkList = [];
+        $currentCpmkId = null;
+        $currentIndex = -1;
+
+        foreach ($rows as $row) {
+            // If this is a new CPMK, add it to the list
+            if ($row['id_cpmk'] !== $currentCpmkId) {
+                $currentCpmkId = $row['id_cpmk'];
+                $currentIndex++;
+
+                // Extract CPMK fields
+                $cpmkList[$currentIndex] = [
+                    'id_cpmk' => $row['id_cpmk'],
+                    'id_rps' => $row['id_rps'],
+                    'kode_cpmk' => $row['kode_cpmk'],
+                    'deskripsi' => $row['deskripsi'],
+                    'urutan' => $row['urutan'],
+                    'created_at' => $row['created_at'],
+                    'updated_at' => $row['updated_at'],
+                    'subcpmk' => []
+                ];
+            }
+
+            // Add SubCPMK if it exists
+            if ($row['id_subcpmk'] !== null) {
+                $cpmkList[$currentIndex]['subcpmk'][] = [
+                    'id_subcpmk' => $row['id_subcpmk'],
+                    'id_cpmk' => $row['id_cpmk'],
+                    'kode_subcpmk' => $row['kode_subcpmk'],
+                    'deskripsi' => $row['subcpmk_deskripsi'],
+                    'indikator' => $row['subcpmk_indikator'],
+                    'urutan' => $row['subcpmk_urutan'],
+                    'created_at' => $row['subcpmk_created_at'],
+                    'updated_at' => $row['subcpmk_updated_at']
+                ];
+            }
         }
 
         return $cpmkList;

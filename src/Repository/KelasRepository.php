@@ -241,24 +241,28 @@ class KelasRepository extends BaseRepository
 
     /**
      * Get kelas with teaching assignments
+     * Optimized to use single query with LEFT JOIN to avoid multiple queries
      */
     public function findWithTeachingAssignments(int $idKelas): ?array
     {
-        // Get kelas info
-        $kelas = $this->findByIdWithDetails($idKelas);
-        if (!$kelas) {
-            return null;
-        }
-
-        // Get teaching assignments
         $sql = "
             SELECT
-                tm.*,
+                k.*,
+                m.nama_mk,
+                m.sks,
+                m.jenis_mk,
+                tm.id_tugas_mengajar,
+                tm.id_dosen,
+                tm.peran,
+                tm.created_at as tm_created_at,
+                tm.updated_at as tm_updated_at,
                 d.nama as nama_dosen,
                 d.email as email_dosen
-            FROM tugas_mengajar tm
+            FROM {$this->table} k
+            JOIN matakuliah m ON k.kode_mk = m.kode_mk AND k.id_kurikulum = m.id_kurikulum
+            LEFT JOIN tugas_mengajar tm ON k.id_kelas = tm.id_kelas
             LEFT JOIN dosen d ON tm.id_dosen = d.id_dosen
-            WHERE tm.id_kelas = :id_kelas
+            WHERE k.id_kelas = :id_kelas
             ORDER BY
                 CASE tm.peran
                     WHEN 'koordinator' THEN 1
@@ -267,7 +271,46 @@ class KelasRepository extends BaseRepository
                 END
         ";
 
-        $kelas['dosen'] = $this->query($sql, ['id_kelas' => $idKelas]);
+        $rows = $this->query($sql, ['id_kelas' => $idKelas]);
+
+        if (empty($rows)) {
+            return null;
+        }
+
+        // First row contains kelas data
+        $kelas = [
+            'id_kelas' => $rows[0]['id_kelas'],
+            'kode_mk' => $rows[0]['kode_mk'],
+            'id_kurikulum' => $rows[0]['id_kurikulum'],
+            'nama_kelas' => $rows[0]['nama_kelas'],
+            'semester' => $rows[0]['semester'],
+            'tahun_ajaran' => $rows[0]['tahun_ajaran'],
+            'kapasitas' => $rows[0]['kapasitas'],
+            'kuota_terisi' => $rows[0]['kuota_terisi'],
+            'status' => $rows[0]['status'],
+            'created_at' => $rows[0]['created_at'],
+            'updated_at' => $rows[0]['updated_at'],
+            'nama_mk' => $rows[0]['nama_mk'],
+            'sks' => $rows[0]['sks'],
+            'jenis_mk' => $rows[0]['jenis_mk'],
+            'dosen' => []
+        ];
+
+        // Extract teaching assignments
+        foreach ($rows as $row) {
+            if ($row['id_tugas_mengajar'] !== null) {
+                $kelas['dosen'][] = [
+                    'id_tugas_mengajar' => $row['id_tugas_mengajar'],
+                    'id_kelas' => $row['id_kelas'],
+                    'id_dosen' => $row['id_dosen'],
+                    'peran' => $row['peran'],
+                    'created_at' => $row['tm_created_at'],
+                    'updated_at' => $row['tm_updated_at'],
+                    'nama_dosen' => $row['nama_dosen'],
+                    'email_dosen' => $row['email_dosen']
+                ];
+            }
+        }
 
         return $kelas;
     }

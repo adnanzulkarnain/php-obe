@@ -151,79 +151,57 @@ class AnalyticsController
     /**
      * Get mahasiswa performance detail
      * GET /api/analytics/mahasiswa/:nim/performance
+     * Optimized: Reduced from 4 separate queries to 1 query using CTEs
      */
     public function getMahasiswaPerformance(string $nim): void
     {
         try {
-            // Get all enrollments with grades
-            $enrollments = $this->enrollmentRepo->getByMahasiswa($nim);
+            // Get all performance data in a single optimized query
+            $enrollments = $this->enrollmentRepo->getMahasiswaPerformanceData($nim);
 
-            // Get CPMK achievements
-            $cpmkSql = "
-                SELECT
-                    kc.*,
-                    c.kode_cpmk,
-                    c.deskripsi as deskripsi_cpmk,
-                    k.nama_kelas,
-                    mk.nama_mk
-                FROM ketercapaian_cpmk kc
-                JOIN cpmk c ON kc.id_cpmk = c.id_cpmk
-                JOIN enrollment e ON kc.id_enrollment = e.id_enrollment
-                JOIN kelas k ON e.id_kelas = k.id_kelas
-                JOIN matakuliah mk ON k.kode_mk = mk.kode_mk AND k.id_kurikulum = mk.id_kurikulum
-                WHERE e.nim = :nim
-                ORDER BY k.semester, k.tahun_ajaran
-            ";
+            if (empty($enrollments)) {
+                Response::success([
+                    'nim' => $nim,
+                    'enrollments' => [],
+                    'cpmk_achievements' => [],
+                    'cpl_achievements' => [],
+                    'gpa' => 0
+                ]);
+                return;
+            }
 
-            $cpmkAchievements = $this->penilaianRepo->query($cpmkSql, ['nim' => $nim]);
+            // Extract GPA from first row (same for all rows)
+            $gpa = $enrollments[0]['gpa'] ?? 0;
 
-            // Get CPL achievements
-            $cplSql = "
-                SELECT
-                    kcpl.*,
-                    cpl.kode_cpl,
-                    cpl.deskripsi as deskripsi_cpl,
-                    cpl.kategori
-                FROM ketercapaian_cpl kcpl
-                JOIN cpl ON kcpl.id_cpl = cpl.id_cpl
-                JOIN enrollment e ON kcpl.id_enrollment = e.id_enrollment
-                WHERE e.nim = :nim
-                ORDER BY cpl.kategori, cpl.urutan
-            ";
+            // Collect all CPMK and CPL achievements from enrollments
+            $allCpmkAchievements = [];
+            $allCplAchievements = [];
 
-            $cplAchievements = $this->penilaianRepo->query($cplSql, ['nim' => $nim]);
+            foreach ($enrollments as &$enrollment) {
+                // Decode JSON achievements
+                $cpmkData = json_decode($enrollment['cpmk_achievements'] ?? '[]', true);
+                $cplData = json_decode($enrollment['cpl_achievements'] ?? '[]', true);
 
-            // Calculate GPA
-            $gpaSql = "
-                SELECT
-                    AVG(
-                        CASE nilai_huruf
-                            WHEN 'A' THEN 4.0
-                            WHEN 'A-' THEN 3.7
-                            WHEN 'AB' THEN 3.5
-                            WHEN 'B+' THEN 3.3
-                            WHEN 'B' THEN 3.0
-                            WHEN 'B-' THEN 2.7
-                            WHEN 'BC' THEN 2.5
-                            WHEN 'C+' THEN 2.3
-                            WHEN 'C' THEN 2.0
-                            WHEN 'C-' THEN 1.7
-                            WHEN 'D' THEN 1.0
-                            ELSE 0
-                        END
-                    ) as gpa
-                FROM enrollment
-                WHERE nim = :nim AND nilai_huruf IS NOT NULL
-            ";
+                // Remove JSON fields from enrollment to keep response clean
+                unset($enrollment['cpmk_achievements']);
+                unset($enrollment['cpl_achievements']);
+                unset($enrollment['gpa']);
 
-            $gpaResult = $this->enrollmentRepo->queryOne($gpaSql, ['nim' => $nim]);
+                // Collect achievements
+                if (is_array($cpmkData)) {
+                    $allCpmkAchievements = array_merge($allCpmkAchievements, $cpmkData);
+                }
+                if (is_array($cplData)) {
+                    $allCplAchievements = array_merge($allCplAchievements, $cplData);
+                }
+            }
 
             Response::success([
                 'nim' => $nim,
                 'enrollments' => $enrollments,
-                'cpmk_achievements' => $cpmkAchievements,
-                'cpl_achievements' => $cplAchievements,
-                'gpa' => round((float)$gpaResult['gpa'], 2)
+                'cpmk_achievements' => $allCpmkAchievements,
+                'cpl_achievements' => $allCplAchievements,
+                'gpa' => (float)$gpa
             ]);
         } catch (\Exception $e) {
             Response::error($e->getMessage(), 400);

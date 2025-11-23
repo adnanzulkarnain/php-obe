@@ -34,6 +34,8 @@ class Database
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
                     PDO::ATTR_STRINGIFY_FETCHES => false,
+                    // Enable persistent connections for better performance
+                    PDO::ATTR_PERSISTENT => true,
                 ]);
             } catch (PDOException $e) {
                 throw new \RuntimeException(

@@ -238,22 +238,41 @@ class EnrollmentRepository extends BaseRepository
 
     /**
      * Bulk enroll students
+     * Optimized: Uses single multi-row INSERT instead of individual INSERTs
      */
     public function bulkEnroll(array $enrollments): bool
     {
+        if (empty($enrollments)) {
+            return true;
+        }
+
         $this->db->beginTransaction();
 
         try {
-            foreach ($enrollments as $enrollment) {
-                $this->create([
-                    'nim' => $enrollment['nim'],
-                    'id_kelas' => $enrollment['id_kelas'],
-                    'tanggal_daftar' => $enrollment['tanggal_daftar'] ?? date('Y-m-d'),
-                    'status' => $enrollment['status'] ?? 'aktif',
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
+            // Build multi-row INSERT statement
+            $values = [];
+            $params = [];
+            $now = date('Y-m-d H:i:s');
+            $today = date('Y-m-d');
+
+            foreach ($enrollments as $index => $enrollment) {
+                $values[] = "(:nim_{$index}, :id_kelas_{$index}, :tanggal_daftar_{$index}, :status_{$index}, :created_at_{$index}, :updated_at_{$index})";
+
+                $params["nim_{$index}"] = $enrollment['nim'];
+                $params["id_kelas_{$index}"] = $enrollment['id_kelas'];
+                $params["tanggal_daftar_{$index}"] = $enrollment['tanggal_daftar'] ?? $today;
+                $params["status_{$index}"] = $enrollment['status'] ?? 'aktif';
+                $params["created_at_{$index}"] = $now;
+                $params["updated_at_{$index}"] = $now;
             }
+
+            $sql = "
+                INSERT INTO {$this->table}
+                (nim, id_kelas, tanggal_daftar, status, created_at, updated_at)
+                VALUES " . implode(', ', $values);
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
 
             $this->db->commit();
             return true;
@@ -362,5 +381,104 @@ class EnrollmentRepository extends BaseRepository
     public function drop(int $idEnrollment): bool
     {
         return $this->updateStatus($idEnrollment, 'drop');
+    }
+
+    /**
+     * Get comprehensive mahasiswa performance data in a single optimized query
+     * Optimized to reduce database round trips from 4 queries to 1
+     */
+    public function getMahasiswaPerformanceData(string $nim): array
+    {
+        $sql = "
+            WITH enrollments_data AS (
+                SELECT
+                    e.*,
+                    k.kode_mk,
+                    k.nama_kelas,
+                    k.semester as semester_kelas,
+                    k.tahun_ajaran,
+                    mk.nama_mk,
+                    mk.sks
+                FROM {$this->table} e
+                JOIN kelas k ON e.id_kelas = k.id_kelas
+                JOIN matakuliah mk ON k.kode_mk = mk.kode_mk AND k.id_kurikulum = mk.id_kurikulum
+                WHERE e.nim = :nim
+            ),
+            cpmk_data AS (
+                SELECT
+                    kc.id_enrollment,
+                    json_agg(
+                        json_build_object(
+                            'id_ketercapaian', kc.id_ketercapaian,
+                            'id_cpmk', kc.id_cpmk,
+                            'kode_cpmk', c.kode_cpmk,
+                            'deskripsi_cpmk', c.deskripsi,
+                            'nilai_cpmk', kc.nilai_cpmk,
+                            'status_tercapai', kc.status_tercapai,
+                            'nama_kelas', k.nama_kelas,
+                            'nama_mk', mk.nama_mk
+                        ) ORDER BY k.semester, k.tahun_ajaran
+                    ) as cpmk_achievements
+                FROM ketercapaian_cpmk kc
+                JOIN cpmk c ON kc.id_cpmk = c.id_cpmk
+                JOIN enrollment e ON kc.id_enrollment = e.id_enrollment
+                JOIN kelas k ON e.id_kelas = k.id_kelas
+                JOIN matakuliah mk ON k.kode_mk = mk.kode_mk AND k.id_kurikulum = mk.id_kurikulum
+                WHERE e.nim = :nim
+                GROUP BY kc.id_enrollment
+            ),
+            cpl_data AS (
+                SELECT
+                    kcpl.id_enrollment,
+                    json_agg(
+                        json_build_object(
+                            'id_ketercapaian', kcpl.id_ketercapaian,
+                            'id_cpl', kcpl.id_cpl,
+                            'kode_cpl', cpl.kode_cpl,
+                            'deskripsi_cpl', cpl.deskripsi,
+                            'kategori', cpl.kategori,
+                            'nilai_cpl', kcpl.nilai_cpl,
+                            'status_tercapai', kcpl.status_tercapai
+                        ) ORDER BY cpl.kategori, cpl.urutan
+                    ) as cpl_achievements
+                FROM ketercapaian_cpl kcpl
+                JOIN cpl ON kcpl.id_cpl = cpl.id_cpl
+                JOIN enrollment e ON kcpl.id_enrollment = e.id_enrollment
+                WHERE e.nim = :nim
+                GROUP BY kcpl.id_enrollment
+            ),
+            gpa_data AS (
+                SELECT
+                    AVG(
+                        CASE nilai_huruf
+                            WHEN 'A' THEN 4.0
+                            WHEN 'A-' THEN 3.7
+                            WHEN 'AB' THEN 3.5
+                            WHEN 'B+' THEN 3.3
+                            WHEN 'B' THEN 3.0
+                            WHEN 'B-' THEN 2.7
+                            WHEN 'BC' THEN 2.5
+                            WHEN 'C+' THEN 2.3
+                            WHEN 'C' THEN 2.0
+                            WHEN 'C-' THEN 1.7
+                            WHEN 'D' THEN 1.0
+                            ELSE 0
+                        END
+                    ) as gpa
+                FROM {$this->table}
+                WHERE nim = :nim AND nilai_huruf IS NOT NULL
+            )
+            SELECT
+                ed.*,
+                COALESCE(cpmk.cpmk_achievements, '[]'::json) as cpmk_achievements,
+                COALESCE(cpl.cpl_achievements, '[]'::json) as cpl_achievements,
+                (SELECT ROUND(COALESCE(gpa, 0)::numeric, 2) FROM gpa_data) as gpa
+            FROM enrollments_data ed
+            LEFT JOIN cpmk_data cpmk ON ed.id_enrollment = cpmk.id_enrollment
+            LEFT JOIN cpl_data cpl ON ed.id_enrollment = cpl.id_enrollment
+            ORDER BY ed.tahun_ajaran DESC, ed.semester_kelas DESC
+        ";
+
+        return $this->query($sql, ['nim' => $nim]);
     }
 }
