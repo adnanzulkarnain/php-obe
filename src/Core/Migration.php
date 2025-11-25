@@ -17,7 +17,6 @@ class Migration
 
     public function __construct()
     {
-        Database::connect();
         $this->pdo = Database::getConnection();
         $this->migrationsPath = __DIR__ . '/../../database/migrations';
         $this->ensureMigrationsTable();
