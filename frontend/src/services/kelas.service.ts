@@ -214,6 +214,23 @@ class KelasService {
     const response = await api.get(`/kelas/${idKelas}/statistics`);
     return response.data.data;
   }
+
+  /**
+   * Alias for getDosenKelas (for compatibility)
+   */
+  async getByDosen(idDosen: string, params?: {
+    tahun_ajaran?: string;
+    semester?: number;
+  }): Promise<DosenKelas[]> {
+    return this.getDosenKelas(Number(idDosen), params);
+  }
+
+  /**
+   * Alias for getEnrollments (for compatibility)
+   */
+  async getEnrollment(idKelas: number): Promise<any[]> {
+    return this.getEnrollments(idKelas);
+  }
 }
 
 export default new KelasService();
