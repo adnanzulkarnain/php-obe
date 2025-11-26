@@ -104,7 +104,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['realisasi-pertemuan'] });
       toast.success('Berita acara berhasil disimpan');
-      navigate('/dosen/berita-acara');
+      navigate('/berita-acara');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Gagal menyimpan berita acara');
@@ -117,7 +117,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['realisasi-pertemuan'] });
       toast.success('Berita acara berhasil diperbarui');
-      navigate('/dosen/berita-acara');
+      navigate('/berita-acara');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Gagal memperbarui berita acara');
@@ -130,7 +130,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['realisasi-pertemuan'] });
       toast.success('Berita acara berhasil disubmit untuk verifikasi');
-      navigate('/dosen/berita-acara');
+      navigate('/berita-acara');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Gagal submit berita acara');
@@ -234,7 +234,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
               Berita acara dengan status "{existingData?.status}" tidak dapat diedit.
             </p>
             <button
-              onClick={() => navigate('/dosen/berita-acara')}
+              onClick={() => navigate('/berita-acara')}
               className="mt-3 text-sm text-yellow-700 hover:text-yellow-800 underline"
             >
               Kembali ke daftar
@@ -250,7 +250,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate('/dosen/berita-acara')}
+          onClick={() => navigate('/berita-acara')}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <FiArrowLeft className="w-5 h-5" />
@@ -406,7 +406,7 @@ export const RealisasiPertemuanForm: React.FC = () => {
         <div className="flex items-center justify-between bg-white rounded-lg shadow p-4">
           <button
             type="button"
-            onClick={() => navigate('/dosen/berita-acara')}
+            onClick={() => navigate('/berita-acara')}
             className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Batal

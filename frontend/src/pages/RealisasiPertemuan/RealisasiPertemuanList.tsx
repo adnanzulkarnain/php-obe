@@ -115,7 +115,7 @@ export const RealisasiPertemuanList: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate('/dosen/berita-acara/create')}
+          onClick={() => navigate('/berita-acara/create')}
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <FiPlus className="w-5 h-5" />
@@ -288,7 +288,7 @@ export const RealisasiPertemuanList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => navigate(`/dosen/berita-acara/${item.id_realisasi}`)}
+                          onClick={() => navigate(`/berita-acara/${item.id_realisasi}`)}
                           className="text-blue-600 hover:text-blue-900"
                           title="Lihat Detail"
                         >
@@ -298,7 +298,7 @@ export const RealisasiPertemuanList: React.FC = () => {
                         {(item.status === 'draft' || item.status === 'rejected') && (
                           <button
                             onClick={() =>
-                              navigate(`/dosen/berita-acara/${item.id_realisasi}/edit`)
+                              navigate(`/berita-acara/${item.id_realisasi}/edit`)
                             }
                             className="text-green-600 hover:text-green-900"
                             title="Edit"
@@ -331,7 +331,7 @@ export const RealisasiPertemuanList: React.FC = () => {
                       <FiFileText className="w-12 h-12 text-gray-400" />
                       <p>Belum ada berita acara perkuliahan</p>
                       <button
-                        onClick={() => navigate('/dosen/berita-acara/create')}
+                        onClick={() => navigate('/berita-acara/create')}
                         className="mt-2 text-blue-600 hover:text-blue-700"
                       >
                         Buat berita acara pertama

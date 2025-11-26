@@ -11,6 +11,7 @@ import {
   FiX,
   FiGrid,
   FiCalendar,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -28,6 +29,8 @@ const menuItems: MenuItem[] = [
   { name: 'CPMK', path: '/cpmk', icon: <FiClipboard />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'RPS', path: '/rps', icon: <FiFileText />, roles: ['admin', 'kaprodi', 'dosen'] },
   { name: 'Kelas', path: '/kelas', icon: <FiGrid />, roles: ['admin', 'kaprodi', 'dosen'] },
+  { name: 'Berita Acara', path: '/berita-acara', icon: <FiFileText />, roles: ['admin', 'dosen'] },
+  { name: 'Verifikasi BA', path: '/verifikasi-berita-acara', icon: <FiCheckCircle />, roles: ['admin', 'kaprodi'] },
   { name: 'KRS', path: '/krs', icon: <FiCalendar />, roles: ['mahasiswa', 'admin'] },
   { name: 'Penilaian', path: '/penilaian', icon: <FiBarChart2 />, roles: ['admin', 'dosen'] },
   { name: 'Mahasiswa', path: '/mahasiswa', icon: <FiUsers />, roles: ['admin', 'kaprodi', 'dosen'] },

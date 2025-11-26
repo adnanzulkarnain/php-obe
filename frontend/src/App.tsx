@@ -28,6 +28,11 @@ const NotificationList = lazy(() => import('./pages/Notifications/NotificationLi
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 
+// Berita Acara Pages
+const RealisasiPertemuanList = lazy(() => import('./pages/RealisasiPertemuan').then(m => ({ default: m.RealisasiPertemuanList })));
+const RealisasiPertemuanForm = lazy(() => import('./pages/RealisasiPertemuan').then(m => ({ default: m.RealisasiPertemuanForm })));
+const VerificationDashboard = lazy(() => import('./pages/RealisasiPertemuan').then(m => ({ default: m.VerificationDashboard })));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -155,6 +160,48 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={['admin', 'kaprodi', 'dosen']}>
                           <KelasList />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Berita Acara Routes */}
+                    <Route
+                      path="berita-acara"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'dosen']}>
+                          <RealisasiPertemuanList />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="berita-acara/create"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'dosen']}>
+                          <RealisasiPertemuanForm />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="berita-acara/:id"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'dosen', 'kaprodi']}>
+                          <RealisasiPertemuanForm />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="berita-acara/:id/edit"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'dosen']}>
+                          <RealisasiPertemuanForm />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="verifikasi-berita-acara"
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'kaprodi']}>
+                          <VerificationDashboard />
                         </ProtectedRoute>
                       }
                     />
