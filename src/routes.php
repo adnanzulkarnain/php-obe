@@ -163,6 +163,36 @@ $router->post('/rps/:id/versions/:version_number/activate', [RPSController::clas
 $router->get('/rps/statistics', [RPSController::class, 'statistics'], [AuthMiddleware::class]);
 
 // ============================================
+// REALISASI PERTEMUAN (Berita Acara Perkuliahan)
+// ============================================
+
+use App\Controller\RealisasiPertemuanController;
+
+// Realisasi Pertemuan CRUD
+$router->get('/realisasi-pertemuan', [RealisasiPertemuanController::class, 'index'], [AuthMiddleware::class]);
+$router->get('/realisasi-pertemuan/:id', [RealisasiPertemuanController::class, 'show'], [AuthMiddleware::class]);
+$router->post('/realisasi-pertemuan', [RealisasiPertemuanController::class, 'create'], [AuthMiddleware::class]);
+$router->put('/realisasi-pertemuan/:id', [RealisasiPertemuanController::class, 'update'], [AuthMiddleware::class]);
+$router->delete('/realisasi-pertemuan/:id', [RealisasiPertemuanController::class, 'delete'], [AuthMiddleware::class]);
+
+// Workflow
+$router->post('/realisasi-pertemuan/:id/submit', [RealisasiPertemuanController::class, 'submit'], [AuthMiddleware::class]);
+$router->post('/realisasi-pertemuan/:id/verify', [RealisasiPertemuanController::class, 'verify'], [AuthMiddleware::class]);
+$router->get('/realisasi-pertemuan/pending-verification', [RealisasiPertemuanController::class, 'getPendingVerification'], [AuthMiddleware::class]);
+
+// Comparison & Export
+$router->get('/realisasi-pertemuan/:id/compare-rps', [RealisasiPertemuanController::class, 'compareWithRPS'], [AuthMiddleware::class]);
+$router->get('/realisasi-pertemuan/:id/export-pdf', [RealisasiPertemuanController::class, 'exportPDF'], [AuthMiddleware::class]);
+
+// Statistics
+$router->get('/kelas/:id/realisasi-statistics', [RealisasiPertemuanController::class, 'getStatisticsByKelas'], [AuthMiddleware::class]);
+$router->get('/dosen/:id_dosen/realisasi-statistics', [RealisasiPertemuanController::class, 'getStatisticsByDosen'], [AuthMiddleware::class]);
+
+// Kehadiran (Attendance)
+$router->get('/realisasi-pertemuan/:id/kehadiran', [RealisasiPertemuanController::class, 'getKehadiran'], [AuthMiddleware::class]);
+$router->get('/kelas/:id/kehadiran-statistics', [RealisasiPertemuanController::class, 'getKehadiranStatistics'], [AuthMiddleware::class]);
+
+// ============================================
 // CPMK MANAGEMENT (Capaian Pembelajaran Mata Kuliah)
 // ============================================
 
