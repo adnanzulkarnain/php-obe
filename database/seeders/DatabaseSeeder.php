@@ -55,6 +55,8 @@ class DatabaseSeeder
             $this->seedRencanaMingguan();
             $this->seedPustaka();
             $this->seedAmbangBatas();
+            $this->seedRealisasiPertemuan();
+            $this->seedKehadiran();
 
             // Commit transaction
             $this->pdo->commit();
@@ -897,6 +899,258 @@ class DatabaseSeeder
     }
 
     /**
+     * Seed realisasi pertemuan (lecture reports)
+     */
+    private function seedRealisasiPertemuan(): void
+    {
+        echo "📝 Seeding realisasi pertemuan (berita acara)...\n";
+
+        // Get kelas with their dosen
+        $stmt = $this->pdo->query("
+            SELECT DISTINCT
+                k.id_kelas,
+                k.kode_mk,
+                k.nama_kelas,
+                tm.id_dosen,
+                rm.id_minggu,
+                rm.minggu_ke,
+                rm.materi
+            FROM kelas k
+            JOIN tugas_mengajar tm ON k.id_kelas = tm.id_kelas
+            LEFT JOIN rencana_mingguan rm ON k.id_rps = rm.id_rps
+            WHERE tm.peran = 'koordinator'
+            ORDER BY k.id_kelas, rm.minggu_ke
+            LIMIT 20
+        ");
+        $kelasData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($kelasData)) {
+            echo "   ⚠️  No class data found, skipping...\n";
+            return;
+        }
+
+        // Get kaprodi for verification
+        $stmt = $this->pdo->query("SELECT id_dosen FROM dosen WHERE id_dosen = 'DSN001' LIMIT 1");
+        $kaprodiId = $stmt->fetchColumn();
+
+        $realisasi = [];
+        $currentDate = new \DateTime('2024-09-02'); // Start of semester
+
+        foreach ($kelasData as $index => $data) {
+            $mingguKe = $data['minggu_ke'] ?? ($index % 14) + 1;
+            $tanggalPelaksanaan = clone $currentDate;
+            $tanggalPelaksanaan->modify('+' . (($index % 14) * 7) . ' days');
+
+            // Decode materi if it's JSON
+            $materiRencana = 'Materi Pertemuan ' . $mingguKe;
+            if (!empty($data['materi'])) {
+                $materiDecoded = json_decode($data['materi'], true);
+                if (is_array($materiDecoded) && !empty($materiDecoded)) {
+                    $materiRencana = implode(', ', $materiDecoded);
+                }
+            }
+
+            // Create different scenarios based on index
+            $scenario = $index % 5;
+
+            switch ($scenario) {
+                case 0: // Draft - being worked on
+                    $realisasi[] = [
+                        $data['id_kelas'],
+                        $data['id_minggu'],
+                        $tanggalPelaksanaan->format('Y-m-d'),
+                        $materiRencana,
+                        'Ceramah, Diskusi Kelompok',
+                        null, // no kendala yet
+                        'Mahasiswa cukup aktif dalam diskusi',
+                        'draft',
+                        null, // not verified
+                        null,
+                        null,
+                        $data['id_dosen'],
+                        $tanggalPelaksanaan->format('Y-m-d H:i:s')
+                    ];
+                    break;
+
+                case 1: // Submitted - waiting verification
+                    $realisasi[] = [
+                        $data['id_kelas'],
+                        $data['id_minggu'],
+                        $tanggalPelaksanaan->format('Y-m-d'),
+                        $materiRencana . ' - Dengan studi kasus praktis',
+                        'Ceramah, Praktikum, Quiz',
+                        'Proyektor sempat bermasalah di awal perkuliahan',
+                        'Materi tersampaikan dengan baik. Quiz dilakukan di akhir sesi.',
+                        'submitted',
+                        null,
+                        null,
+                        null,
+                        $data['id_dosen'],
+                        $tanggalPelaksanaan->format('Y-m-d H:i:s')
+                    ];
+                    break;
+
+                case 2: // Verified - approved by kaprodi
+                    $verifiedAt = clone $tanggalPelaksanaan;
+                    $verifiedAt->modify('+2 days');
+                    $realisasi[] = [
+                        $data['id_kelas'],
+                        $data['id_minggu'],
+                        $tanggalPelaksanaan->format('Y-m-d'),
+                        $materiRencana . ' - Sesuai RPS',
+                        'Ceramah, Diskusi, Presentasi Kelompok',
+                        null,
+                        'Perkuliahan berjalan lancar. Mahasiswa aktif bertanya.',
+                        'verified',
+                        $kaprodiId,
+                        $verifiedAt->format('Y-m-d H:i:s'),
+                        'Berita acara sudah sesuai dengan RPS. Metode pembelajaran sudah baik.',
+                        $data['id_dosen'],
+                        $tanggalPelaksanaan->format('Y-m-d H:i:s')
+                    ];
+                    break;
+
+                case 3: // Rejected - needs revision
+                    $verifiedAt = clone $tanggalPelaksanaan;
+                    $verifiedAt->modify('+1 day');
+                    $realisasi[] = [
+                        $data['id_kelas'],
+                        $data['id_minggu'],
+                        $tanggalPelaksanaan->format('Y-m-d'),
+                        'Materi singkat tentang ' . $materiRencana,
+                        'Ceramah',
+                        'Banyak mahasiswa yang terlambat',
+                        'Materi kurang mendalam',
+                        'rejected',
+                        $kaprodiId,
+                        $verifiedAt->format('Y-m-d H:i:s'),
+                        'Materi yang disampaikan belum sesuai dengan RPS. Mohon lengkapi dengan metode pembelajaran yang lebih variatif dan jelaskan lebih detail materi yang disampaikan.',
+                        $data['id_dosen'],
+                        $tanggalPelaksanaan->format('Y-m-d H:i:s')
+                    ];
+                    break;
+
+                case 4: // Verified - another approved one
+                    $verifiedAt = clone $tanggalPelaksanaan;
+                    $verifiedAt->modify('+3 days');
+                    $realisasi[] = [
+                        $data['id_kelas'],
+                        $data['id_minggu'],
+                        $tanggalPelaksanaan->format('Y-m-d'),
+                        $materiRencana . ' - Dengan demonstrasi',
+                        'Ceramah, Demonstrasi, Latihan',
+                        'Waktu sedikit kurang untuk latihan',
+                        'Demonstrasi berjalan baik. Mahasiswa mengikuti dengan antusias.',
+                        'verified',
+                        $kaprodiId,
+                        $verifiedAt->format('Y-m-d H:i:s'),
+                        'Pembelajaran sudah sesuai RPS. Demonstrasi sangat membantu pemahaman mahasiswa.',
+                        $data['id_dosen'],
+                        $tanggalPelaksanaan->format('Y-m-d H:i:s')
+                    ];
+                    break;
+            }
+        }
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO realisasi_pertemuan (
+                id_kelas, id_minggu, tanggal_pelaksanaan, materi_disampaikan,
+                metode_digunakan, kendala, catatan_dosen, status,
+                verified_by, verified_at, komentar_kaprodi, created_by, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        foreach ($realisasi as $r) {
+            $stmt->execute($r);
+        }
+
+        echo "   ✅ Created " . count($realisasi) . " lecture reports with mixed statuses\n";
+    }
+
+    /**
+     * Seed kehadiran (attendance records)
+     */
+    private function seedKehadiran(): void
+    {
+        echo "✅ Seeding kehadiran (attendance)...\n";
+
+        // Get realisasi pertemuan with their class enrollment
+        $stmt = $this->pdo->query("
+            SELECT
+                rp.id_realisasi,
+                rp.id_kelas,
+                rp.status,
+                e.nim
+            FROM realisasi_pertemuan rp
+            JOIN enrollment e ON rp.id_kelas = e.id_kelas
+            WHERE e.status = 'aktif'
+            ORDER BY rp.id_realisasi, e.nim
+        ");
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($data)) {
+            echo "   ⚠️  No realisasi or enrollment data found, skipping...\n";
+            return;
+        }
+
+        $kehadiran = [];
+        $currentRealisasi = null;
+        $studentCount = 0;
+
+        foreach ($data as $row) {
+            // Track when we move to a new realisasi
+            if ($currentRealisasi !== $row['id_realisasi']) {
+                $currentRealisasi = $row['id_realisasi'];
+                $studentCount = 0;
+            }
+
+            $studentCount++;
+
+            // Create realistic attendance patterns
+            // 70% hadir, 15% izin, 10% sakit, 5% alpha
+            $rand = rand(1, 100);
+            if ($rand <= 70) {
+                $status = 'hadir';
+                $keterangan = null;
+            } elseif ($rand <= 85) {
+                $status = 'izin';
+                $keterangan = 'Izin keperluan keluarga';
+            } elseif ($rand <= 95) {
+                $status = 'sakit';
+                $keterangan = 'Sakit demam';
+            } else {
+                $status = 'alpha';
+                $keterangan = null;
+            }
+
+            // For draft reports, make attendance slightly higher (for testing)
+            if ($row['status'] === 'draft' && $rand <= 80) {
+                $status = 'hadir';
+                $keterangan = null;
+            }
+
+            $kehadiran[] = [
+                $row['id_realisasi'],
+                $row['nim'],
+                $status,
+                $keterangan
+            ];
+        }
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO kehadiran (id_realisasi, nim, status, keterangan)
+            VALUES (?, ?, ?, ?)
+        ");
+
+        foreach ($kehadiran as $k) {
+            $stmt->execute($k);
+        }
+
+        echo "   ✅ Created " . count($kehadiran) . " attendance records\n";
+    }
+
+    /**
      * Convert numeric grade to letter grade
      */
     private function convertToGrade(float $nilai): string
@@ -925,7 +1179,8 @@ class DatabaseSeeder
         $tables = [
             'fakultas', 'prodi', 'dosen', 'kurikulum', 'cpl', 'matakuliah',
             'rps', 'cpmk', 'subcpmk', 'kelas', 'mahasiswa', 'enrollment',
-            'users', 'komponen_penilaian', 'nilai_detail', 'ketercapaian_cpmk'
+            'users', 'komponen_penilaian', 'nilai_detail', 'ketercapaian_cpmk',
+            'realisasi_pertemuan', 'kehadiran'
         ];
 
         foreach ($tables as $table) {
