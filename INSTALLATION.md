@@ -19,7 +19,7 @@ Complete installation guide for OBE System with all infrastructure features.
 ### Minimum Requirements
 
 - **PHP:** >= 8.3
-- **PostgreSQL:** >= 14
+- **MySQL:** >= 8.0
 - **Memory:** 512MB RAM
 - **Disk Space:** 1GB
 - **Composer:** Latest version
@@ -27,11 +27,11 @@ Complete installation guide for OBE System with all infrastructure features.
 ### Required PHP Extensions
 
 ```bash
-php -m | grep -E "pdo|pgsql|json|mbstring|gd|zip"
+php -m | grep -E "pdo|mysqli|json|mbstring|gd|zip"
 ```
 
 Required extensions:
-- `pdo`, `pdo_pgsql` - Database connectivity
+- `pdo`, `pdo_mysql`, `mysqli` - Database connectivity
 - `json` - JSON processing
 - `mbstring` - Multibyte string functions
 - `gd` - Image processing for PDF
@@ -81,7 +81,7 @@ APP_URL=https://your-domain.com
 
 # Database
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=3306
 DB_NAME=obe_system
 DB_USER=obe_user
 DB_PASSWORD=your_secure_password
@@ -142,7 +142,7 @@ chmod +x migrate.php
 
 ```bash
 # Create database
-createdb obe_system
+mysql -u root -p -e "CREATE DATABASE obe_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # Run migrations
 php migrate.php migrate
@@ -158,22 +158,21 @@ php migrate.php status
 
 ```bash
 # Create database
-createdb obe_system
+mysql -u root -p -e "CREATE DATABASE obe_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # Import schema
-psql -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 ```
 
 ### Database User Setup
 
 ```sql
 -- Create dedicated database user
-CREATE USER obe_user WITH PASSWORD 'your_secure_password';
+CREATE USER 'obe_user'@'localhost' IDENTIFIED BY 'your_secure_password';
 
 -- Grant permissions
-GRANT ALL PRIVILEGES ON DATABASE obe_system TO obe_user;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO obe_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO obe_user;
+GRANT ALL PRIVILEGES ON obe_system.* TO 'obe_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
 ---
@@ -418,10 +417,11 @@ Setup automated backup:
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/backups/obe-system"
 DB_NAME="obe_system"
+DB_USER="obe_user"
 
 mkdir -p $BACKUP_DIR
 
-pg_dump $DB_NAME | gzip > $BACKUP_DIR/obe_system_$DATE.sql.gz
+mysqldump -u $DB_USER -p $DB_NAME | gzip > $BACKUP_DIR/obe_system_$DATE.sql.gz
 
 # Keep only last 30 days
 find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
@@ -444,11 +444,11 @@ Add to crontab:
 
 **Solution:**
 ```bash
-# Check PostgreSQL status
-systemctl status postgresql
+# Check MySQL status
+systemctl status mysql
 
 # Check connection
-psql -U obe_user -d obe_system -h localhost
+mysql -u obe_user -p -h localhost obe_system
 ```
 
 #### 2. File Upload Fails
