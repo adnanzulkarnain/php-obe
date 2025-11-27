@@ -90,10 +90,9 @@ class KehadiranRepository extends BaseRepository
         $sql = "
             INSERT INTO {$this->table} (id_realisasi, nim, status, keterangan)
             VALUES " . implode(', ', $values) . "
-            ON CONFLICT (id_realisasi, nim)
-            DO UPDATE SET
-                status = EXCLUDED.status,
-                keterangan = EXCLUDED.keterangan
+            ON DUPLICATE KEY UPDATE
+                status = VALUES(status),
+                keterangan = VALUES(keterangan)
         ";
 
         return $this->execute($sql, $params);

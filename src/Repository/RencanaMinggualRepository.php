@@ -125,16 +125,15 @@ class RencanaMinggualRepository extends BaseRepository
                 media_software, media_hardware, pengalaman_belajar, estimasi_waktu_menit
             )
             VALUES " . implode(', ', $values) . "
-            ON CONFLICT (id_rps, minggu_ke)
-            DO UPDATE SET
-                id_subcpmk = EXCLUDED.id_subcpmk,
-                materi = EXCLUDED.materi,
-                metode = EXCLUDED.metode,
-                aktivitas = EXCLUDED.aktivitas,
-                media_software = EXCLUDED.media_software,
-                media_hardware = EXCLUDED.media_hardware,
-                pengalaman_belajar = EXCLUDED.pengalaman_belajar,
-                estimasi_waktu_menit = EXCLUDED.estimasi_waktu_menit,
+            ON DUPLICATE KEY UPDATE
+                id_subcpmk = VALUES(id_subcpmk),
+                materi = VALUES(materi),
+                metode = VALUES(metode),
+                aktivitas = VALUES(aktivitas),
+                media_software = VALUES(media_software),
+                media_hardware = VALUES(media_hardware),
+                pengalaman_belajar = VALUES(pengalaman_belajar),
+                estimasi_waktu_menit = VALUES(estimasi_waktu_menit),
                 updated_at = CURRENT_TIMESTAMP
         ";
 

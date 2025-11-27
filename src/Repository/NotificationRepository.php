@@ -55,8 +55,8 @@ class NotificationRepository extends BaseRepository
                     is_read, is_sent_email, created_at
                 ) VALUES (
                     :id_user, :tipe_notifikasi, :judul, :pesan, :link,
-                    :is_read, :is_sent_email, NOW()
-                ) RETURNING id_notification";
+                    :is_read, :is_sent_email, CURRENT_TIMESTAMP
+                )";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -69,7 +69,7 @@ class NotificationRepository extends BaseRepository
             'is_sent_email' => $data['is_sent_email'] ?? false
         ]);
 
-        return (int) $stmt->fetchColumn();
+        return (int) $this->pdo->lastInsertId();
     }
 
     /**

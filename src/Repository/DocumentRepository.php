@@ -101,8 +101,8 @@ class DocumentRepository extends BaseRepository
                 ) VALUES (
                     :nama_file, :file_path, :tipe_file, :ukuran_file,
                     :kategori_dokumen, :id_ref, :uploaded_by, :deskripsi,
-                    NOW()
-                ) RETURNING id_document";
+                    CURRENT_TIMESTAMP
+                )";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -116,7 +116,7 @@ class DocumentRepository extends BaseRepository
             'deskripsi' => $data['deskripsi'] ?? null
         ]);
 
-        return (int) $stmt->fetchColumn();
+        return (int) $this->pdo->lastInsertId();
     }
 
     /**
