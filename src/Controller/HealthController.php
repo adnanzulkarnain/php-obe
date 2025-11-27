@@ -106,7 +106,7 @@ class HealthController
         }
 
         // Check required extensions
-        $requiredExtensions = ['pdo', 'pdo_pgsql', 'json', 'mbstring'];
+        $requiredExtensions = ['pdo', 'pdo_mysql', 'json', 'mbstring'];
         foreach ($requiredExtensions as $ext) {
             if (!extension_loaded($ext)) {
                 $status = 'unhealthy';
@@ -144,12 +144,13 @@ class HealthController
             $pdo->query('SELECT 1');
 
             // Get database version
-            $stmt = $pdo->query('SELECT version()');
+            $stmt = $pdo->query('SELECT VERSION()');
             $version = $stmt->fetchColumn();
 
-            // Check connection count
-            $stmt = $pdo->query('SELECT COUNT(*) FROM pg_stat_activity');
-            $connections = $stmt->fetchColumn();
+            // Check connection count (MySQL specific)
+            $stmt = $pdo->query('SHOW STATUS LIKE "Threads_connected"');
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $connections = $result['Value'] ?? 0;
 
             return [
                 'status' => 'healthy',
@@ -262,11 +263,21 @@ class HealthController
             Database::connect();
             $pdo = Database::getConnection();
 
-            $stmt = $pdo->query('SELECT COUNT(*) FROM pg_stat_activity WHERE datname = current_database()');
-            $connections = $stmt->fetchColumn();
+            // Get connection count (MySQL)
+            $stmt = $pdo->query('SHOW STATUS LIKE "Threads_connected"');
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $connections = $result['Value'] ?? 0;
 
-            $stmt = $pdo->query('SELECT pg_database_size(current_database())');
-            $dbSize = $stmt->fetchColumn();
+            // Get database size (MySQL)
+            $dbName = $_ENV['DB_NAME'] ?? 'obe_system';
+            $stmt = $pdo->prepare("
+                SELECT SUM(data_length + index_length) as size
+                FROM information_schema.TABLES
+                WHERE table_schema = :dbname
+            ");
+            $stmt->execute(['dbname' => $dbName]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $dbSize = $result['size'] ?? 0;
 
             return [
                 'connections' => (int)$connections,

@@ -15,7 +15,7 @@ class RencanaMingguan
     public int $minggu_ke; // Week number (1-16)
     public ?int $id_subcpmk = null;
 
-    // JSONB fields (stored as JSON in database)
+    // JSON fields (stored as JSON in MySQL database)
     public mixed $materi = null; // Material to be taught
     public mixed $metode = null; // Teaching methods
     public mixed $aktivitas = null; // Learning activities
