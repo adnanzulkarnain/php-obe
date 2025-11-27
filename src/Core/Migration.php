@@ -28,11 +28,11 @@ class Migration
     private function ensureMigrationsTable(): void
     {
         $sql = "CREATE TABLE IF NOT EXISTS {$this->migrationsTable} (
-            id SERIAL PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
             migration VARCHAR(255) NOT NULL UNIQUE,
             batch INT NOT NULL,
             executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )";
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
         $this->pdo->exec($sql);
     }
