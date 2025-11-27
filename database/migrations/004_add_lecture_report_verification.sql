@@ -5,12 +5,15 @@
 -- Add status and verification columns to realisasi_pertemuan
 ALTER TABLE realisasi_pertemuan
 ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'draft'
-    CHECK (status IN ('draft', 'submitted', 'verified', 'rejected'))
     COMMENT 'Status berita acara: draft, submitted, verified, rejected',
 ADD COLUMN IF NOT EXISTS verified_by VARCHAR(20) COMMENT 'ID dosen (kaprodi) yang melakukan verifikasi',
 ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP NULL COMMENT 'Waktu verifikasi dilakukan',
 ADD COLUMN IF NOT EXISTS komentar_kaprodi TEXT COMMENT 'Komentar/feedback dari kaprodi',
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- Add CHECK constraint for status column (separate statement for compatibility)
+ALTER TABLE realisasi_pertemuan
+ADD CONSTRAINT chk_realisasi_status CHECK (status IN ('draft', 'submitted', 'verified', 'rejected'));
 
 -- Add foreign key for verified_by
 ALTER TABLE realisasi_pertemuan

@@ -25,7 +25,8 @@ CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpmk_enrollment ON ketercapaian_cpmk
 
 -- Index for ketercapaian_cpl lookups by enrollment
 -- Optimizes CPL achievement lookups by enrollment
-CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpl_enrollment ON ketercapaian_cpl(id_enrollment, id_cpl);
+-- Note: idx_ketercapaian_cpl_enrollment already exists from migration 001, creating composite index with different name
+CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpl_enrollment_cpl ON ketercapaian_cpl(id_enrollment, id_cpl);
 
 -- Index for subcpmk lookups by cpmk
 -- Optimizes SubCPMK lookups with proper ordering
