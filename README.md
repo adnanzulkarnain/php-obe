@@ -959,111 +959,362 @@ npm run build
 
 ## 📊 Database Seeding
 
-The system includes a comprehensive database seeder that populates sample data demonstrating the complete OBE workflow.
+Sistem ini menyediakan **comprehensive database seeder** yang mengisi database dengan data sampel lengkap untuk mendemonstrasikan seluruh workflow OBE dari awal hingga akhir.
 
-### What Gets Seeded
+### ✨ Kenapa Perlu Database Seeding?
 
+- 🚀 **Quick Start**: Langsung bisa demo aplikasi tanpa input data manual
+- 🧪 **Testing**: Data realistis untuk testing fitur-fitur sistem
+- 📚 **Learning**: Memahami struktur data dan relationship dalam sistem OBE
+- 🎯 **Development**: Data konsisten untuk development dan debugging
+
+---
+
+### 📦 Data yang Di-seed
+
+Seeder akan mengisi **18+ tabel** dengan data yang saling berelasi:
+
+#### 1️⃣ Master Data & Users
 ```
-Master Data:
-  ├─ 3 Fakultas (FTI, FEB, FT)
-  ├─ 3 Program Studi (TIF, SI, Manajemen)
-  ├─ 6 Dosen (with teaching assignments)
-  └─ 4 Roles (admin, kaprodi, dosen, mahasiswa)
-
-Curriculum Data:
-  ├─ 3 Kurikulum (K2024 active, K2020 archived)
-  ├─ 9 CPL (Graduate Learning Outcomes)
-  │   ├─ Sikap (2)
-  │   ├─ Pengetahuan (2)
-  │   ├─ Keterampilan Umum (2)
-  │   └─ Keterampilan Khusus (3)
-  ├─ 10 Mata Kuliah (with prerequisites)
-  └─ 6 Prasyarat relationships
-
-Learning Plans:
-  ├─ 3 RPS (approved status)
-  ├─ 12 CPMK (Course Learning Outcomes)
-  ├─ 3 SubCPMK (with indicators)
-  ├─ CPMK-CPL Relations (with contribution weights)
-  ├─ 10 Rencana Mingguan (weekly plans with JSONB data)
-  └─ 4 Pustaka (reference books)
-
-Classes & Students:
-  ├─ 6 Kelas (2 classes per course: A, B)
-  ├─ 50 Mahasiswa (NIM: 202401001 - 202401050)
-  ├─ 100+ Enrollment records
-  └─ 10 Teaching assignments
-
-Assessment System:
-  ├─ 6 Jenis Penilaian (Quiz, Tugas, UTS, UAS, etc)
-  ├─ Template Penilaian (per CPMK with weights)
-  ├─ Komponen Penilaian (actual components per class)
-  ├─ 100+ Nilai Detail (student grades with auto calculation)
-  ├─ 200+ Ketercapaian CPMK (CPMK achievement tracking)
-  └─ Ambang Batas (pass thresholds)
+├─ 4 Roles (admin, kaprodi, dosen, mahasiswa)
+├─ 3 Fakultas (FTI, FEB, FT)
+├─ 3 Program Studi (TIF, SI, Manajemen)
+├─ 6 Dosen (DSN001-DSN006) dengan assignments
+├─ 50 Mahasiswa (NIM: 202401001 - 202401050)
+└─ 6 Users (admin, kaprodi, 2 dosen, 2 mahasiswa)
 ```
 
-### Running the Seeder
+#### 2️⃣ Kurikulum & CPL
+```
+├─ 3 Kurikulum:
+│   ├─ K2024 TIF (aktif, primary)
+│   ├─ K2020 TIF (non-aktif, archived)
+│   └─ K2024 SI (aktif)
+│
+└─ 9 CPL untuk K2024 TIF:
+    ├─ CPL-S1, CPL-S2 (Sikap)
+    ├─ CPL-P1, CPL-P2 (Pengetahuan)
+    ├─ CPL-KU1, CPL-KU2 (Keterampilan Umum)
+    └─ CPL-KK1, CPL-KK2, CPL-KK3 (Keterampilan Khusus)
+```
 
+#### 3️⃣ Mata Kuliah & Prerequisites
+```
+├─ 10 Mata Kuliah (TIF101-TIF401):
+│   ├─ Semester 1: Algoritma, Matematika Diskrit, Pengantar TI
+│   ├─ Semester 2: Struktur Data, Basis Data, PBO
+│   ├─ Semester 3: RPL, Desain Algoritma, Web Programming
+│   └─ Semester 4: Kecerdasan Buatan (pilihan)
+│
+└─ 6 Prasyarat relationships:
+    ├─ Struktur Data ← Algoritma
+    ├─ PBO ← Algoritma
+    ├─ RPL ← Struktur Data + Basis Data
+    └─ ... (dan lainnya)
+```
+
+#### 4️⃣ RPS & Pembelajaran
+```
+├─ 3 RPS (status: approved):
+│   ├─ Rekayasa Perangkat Lunak (TIF301)
+│   ├─ Pemrograman Web (TIF303)
+│   └─ Algoritma dan Pemrograman (TIF101)
+│
+├─ 12 CPMK (Course Learning Outcomes)
+├─ 3 SubCPMK dengan indikator
+├─ 10 Rencana Mingguan (dengan JSON materi, metode, aktivitas)
+├─ 4 Pustaka/Referensi
+└─ CPMK-CPL Mapping (dengan bobot kontribusi)
+```
+
+#### 5️⃣ Kelas & Enrollment
+```
+├─ 6 Kelas (2 per mata kuliah: A & B)
+│   ├─ Kapasitas: 40 mahasiswa
+│   ├─ Status: open
+│   └─ Jadwal lengkap (hari, jam, ruangan)
+│
+├─ 10 Tugas Mengajar (dosen → kelas)
+│   ├─ Koordinator & Pengampu
+│   └─ Multiple dosen per class
+│
+└─ 100+ Enrollment records
+    ├─ 35 mahasiswa × 3-4 kelas
+    └─ Status: aktif dengan nilai
+```
+
+#### 6️⃣ Penilaian & Assessment
+```
+├─ 6 Jenis Penilaian:
+│   ├─ Quiz (10-15%)
+│   ├─ Tugas (20%)
+│   ├─ Praktikum
+│   ├─ UTS (30%)
+│   ├─ UAS (35-40%)
+│   └─ Project
+│
+├─ Template Penilaian (per CPMK dengan bobot)
+├─ Komponen Penilaian (actual per class)
+├─ 100+ Nilai Detail (grades dengan auto-calc)
+├─ 200+ Ketercapaian CPMK (achievement tracking)
+└─ Ambang Batas (pass thresholds)
+```
+
+#### 7️⃣ Realisasi Pertemuan & Kehadiran
+```
+├─ 20 Berita Acara Perkuliahan:
+│   ├─ draft (sedang dikerjakan)
+│   ├─ submitted (menunggu verifikasi)
+│   ├─ verified (disetujui kaprodi)
+│   └─ rejected (perlu revisi)
+│
+└─ Attendance records:
+    ├─ Status: hadir, izin, sakit, alpha
+    └─ Realistic distribution (70% hadir, 15% izin, 10% sakit, 5% alpha)
+```
+
+---
+
+### 🚀 Cara Menjalankan Seeder
+
+#### Prerequisites
 ```bash
-# Make sure .env is configured and database schema is imported
+# 1. Pastikan .env sudah dikonfigurasi
+cat .env | grep DB_
+
+# 2. Pastikan database schema sudah di-import
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+```
+
+#### Jalankan Seeder
+```bash
+# Dari root directory project
 php database/seed.php
-
-# Output will show progress with emojis:
-# 📝 Seeding roles...
-# 🏛️  Seeding fakultas...
-# 🎓 Seeding prodi...
-# 👨‍🏫 Seeding dosen...
-# ... (and more)
 ```
 
-### Seeder Features
+#### Output yang Diharapkan
+```
+╔═══════════════════════════════════════════════════════════╗
+║       OBE System - Database Seeder                       ║
+╚═══════════════════════════════════════════════════════════╝
 
-- ✅ **Transaction-safe**: Automatic rollback on error
-- ✅ **Idempotent**: Uses `ON CONFLICT DO NOTHING` - safe to run multiple times
-- ✅ **Comprehensive**: Full OBE workflow from curriculum to assessment
-- ✅ **Realistic data**: Proper relationships and realistic values
-- ✅ **Error handling**: Clear error messages with stack trace
-- ✅ **Summary report**: Shows count of records created per table
+=== Starting Database Seeding ===
 
-### Sample Data Flow
+📝 Seeding roles...
+📝 Seeding jenis penilaian...
+🏛️  Seeding fakultas...
+🎓 Seeding prodi...
+👨‍🏫 Seeding dosen...
+📚 Seeding kurikulum...
+🎯 Seeding CPL...
+📖 Seeding mata kuliah...
+🔗 Seeding prasyarat...
+📋 Seeding RPS...
+🎯 Seeding CPMK...
+📌 Seeding SubCPMK...
+🔗 Seeding relasi CPMK-CPL...
+🏫 Seeding kelas...
+👨‍🏫 Seeding tugas mengajar...
+👨‍🎓 Seeding mahasiswa...
+📝 Seeding enrollment...
+👤 Seeding users...
+📊 Seeding template penilaian...
+📋 Seeding komponen penilaian...
+💯 Seeding nilai detail...
+🎯 Seeding ketercapaian CPMK...
+📅 Seeding rencana mingguan...
+📚 Seeding pustaka...
+⚖️  Seeding ambang batas...
+📝 Seeding realisasi pertemuan...
+✅ Seeding kehadiran...
 
-The seeded data demonstrates this workflow:
+=== Database Seeded Successfully! ===
+
+📊 Seeding Summary:
+==================
+   Fakultas: 3 records
+   Prodi: 3 records
+   Dosen: 6 records
+   Kurikulum: 3 records
+   Cpl: 9 records
+   Matakuliah: 10 records
+   Rps: 3 records
+   Cpmk: 12 records
+   Subcpmk: 3 records
+   Kelas: 6 records
+   Mahasiswa: 50 records
+   Enrollment: 105 records
+   Users: 6 records
+   Komponen_penilaian: 12 records
+   Nilai_detail: 100 records
+   Ketercapaian_cpmk: 200 records
+   Realisasi_pertemuan: 20 records
+   Kehadiran: 350+ records
+
+✅ Sample Login Credentials:
+   Admin: admin / admin123
+   Kaprodi: kaprodi_tif / kaprodi123
+   Dosen: dosen1 / dosen123
+   Mahasiswa: 202401001 / mhs123
+
+╔═══════════════════════════════════════════════════════════╗
+║  ✅  Database seeding completed successfully!            ║
+╚═══════════════════════════════════════════════════════════╝
+```
+
+---
+
+### 🎯 Kredensial Login Setelah Seeding
+
+| Role | Username | Password | Ref ID | Keterangan |
+|------|----------|----------|--------|------------|
+| **Admin** | `admin` | `admin123` | - | Full system access |
+| **Kaprodi** | `kaprodi_tif` | `kaprodi123` | DSN001 | Approve RPS, kurikulum |
+| **Dosen** | `dosen1` | `dosen123` | DSN002 | Create RPS, input nilai |
+| **Dosen** | `dosen2` | `dosen123` | DSN003 | Create RPS, input nilai |
+| **Mahasiswa** | `202401001` | `mhs123` | 202401001 | View nilai, enroll KRS |
+| **Mahasiswa** | `202401002` | `mhs123` | 202401002 | View nilai, enroll KRS |
+
+**Note**:
+- 50 mahasiswa dibuat dengan NIM `202401001` sampai `202401050`, semua password: `mhs123`
+- 6 dosen dibuat dengan ID `DSN001` sampai `DSN006`
+
+---
+
+### ⚙️ Fitur-fitur Seeder
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| 🔒 **Transaction-safe** | Automatic rollback jika terjadi error - database tetap konsisten |
+| 🔄 **Idempotent** | Aman dijalankan berkali-kali (uses `INSERT IGNORE`) |
+| 🎯 **Comprehensive** | Full OBE workflow dari kurikulum → assessment → achievement |
+| 📊 **Realistic Data** | Proper relationships, realistic values, dan valid constraints |
+| ❌ **Error Handling** | Clear error messages dengan stack trace untuk debugging |
+| 📈 **Summary Report** | Menampilkan jumlah records per tabel setelah seeding |
+| 🔗 **Relational Integrity** | Semua foreign keys valid dan relationships terjaga |
+
+---
+
+### 📋 Sample Data Flow
+
+Seeded data mendemonstrasikan workflow OBE yang lengkap:
 
 ```
-1. Curriculum Setup
-   Faculty → Program → Curriculum → CPL → Courses
+1️⃣ PERENCANAAN KURIKULUM
+   Fakultas → Prodi → Kurikulum → CPL → Mata Kuliah → Prasyarat
 
-2. Learning Planning
-   RPS → CPMK → SubCPMK
-   CPMK ←→ CPL (with contribution weights)
+2️⃣ PERENCANAAN PEMBELAJARAN
+   RPS (approved) → CPMK → SubCPMK + Indikator
+   CPMK ←→ CPL (dengan bobot kontribusi)
+   Rencana Mingguan (16 pertemuan) + Pustaka
 
-3. Class Management
-   Classes created from RPS
-   Lecturers assigned to classes
-   Students enrolled in classes
+3️⃣ PELAKSANAAN KELAS
+   Kelas (A, B) dibuat dari RPS
+   Dosen di-assign ke kelas (koordinator + pengampu)
+   Mahasiswa enroll ke kelas (via KRS)
+   Realisasi Pertemuan + Kehadiran
 
-4. Assessment System
-   Assessment templates per CPMK
-   Actual components per class
-   Student grades recorded
-   CPMK achievement calculated
-   CPL achievement derived from CPMK
+4️⃣ PENILAIAN & ASSESSMENT
+   Template Penilaian (per CPMK dengan bobot)
+   Komponen Penilaian (Quiz, Tugas, UTS, UAS)
+   Nilai Detail (auto-calculated weighted scores)
+   Ketercapaian CPMK (achievement tracking)
+   Ketercapaian CPL (derived dari CPMK mapping)
 ```
 
-### Resetting Data
+---
 
-To reset and reseed the database:
+### 🔄 Reset & Re-seed Database
 
+Jika ingin reset semua data dan seed ulang:
+
+#### Method 1: Re-import Schema (DROPS ALL DATA)
 ```bash
-# 1. Re-import schema (drops all data)
+# WARNING: Ini akan menghapus semua data!
 mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
-# 2. Run seeder again
+# Kemudian run seeder lagi
 php database/seed.php
 ```
 
-For more details, see [database/README.md](database/README.md)
+#### Method 2: Truncate Tables (Faster, tapi harus hati-hati dengan FK)
+```bash
+# Login ke MySQL
+mysql -u root -p obe_system
+
+# Disable foreign key checks
+SET FOREIGN_KEY_CHECKS = 0;
+
+# Truncate semua tables (atau selective tables)
+TRUNCATE TABLE users;
+TRUNCATE TABLE enrollment;
+# ... dan seterusnya
+
+# Enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
+
+# Exit dan run seeder
+exit
+php database/seed.php
+```
+
+---
+
+### 🐛 Troubleshooting
+
+#### Error: "Error: .env file not found!"
+```bash
+# Pastikan .env file ada
+cp .env.example .env
+nano .env  # Edit DB credentials
+```
+
+#### Error: "SQLSTATE[42S02]: Base table or view not found"
+```bash
+# Schema belum di-import
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+```
+
+#### Error: "SQLSTATE[23000]: Integrity constraint violation"
+```bash
+# Seeder sudah pernah dijalankan atau ada data existing
+# Re-import schema untuk clean slate:
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+php database/seed.php
+```
+
+#### Error: "Connection refused"
+```bash
+# Cek MySQL service running
+sudo systemctl status mysql
+sudo systemctl start mysql
+
+# Cek credentials di .env
+cat .env | grep DB_
+```
+
+---
+
+### 📚 Dokumentasi Tambahan
+
+Untuk detail lebih lanjut tentang:
+- Database schema design → Lihat `OBE-Database-Schema-v3-WITH-KURIKULUM.sql`
+- Seeder implementation → Lihat `database/seeders/DatabaseSeeder.php`
+- Database migrations → Lihat `database/README.md` (jika ada)
+
+---
+
+### 💡 Tips & Best Practices
+
+✅ **DO**:
+- Run seeder di **development/testing environment** untuk demo dan testing
+- Gunakan seeded data sebagai **reference** untuk struktur data yang benar
+- Re-seed jika butuh **clean slate** untuk testing
+
+❌ **DON'T**:
+- Jangan run seeder di **production** (gunakan migration untuk prod)
+- Jangan edit seeded data jika mau test workflow (re-seed untuk fresh data)
+- Jangan lupa **backup** jika ada data penting sebelum re-import schema
 
 ## 🎯 Usage
 
