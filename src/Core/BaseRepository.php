@@ -95,14 +95,12 @@ abstract class BaseRepository
         $placeholders = array_map(fn($col) => ":{$col}", $columns);
 
         $sql = "INSERT INTO {$this->table} (" . implode(', ', $columns) . ")
-                VALUES (" . implode(', ', $placeholders) . ")
-                RETURNING {$this->primaryKey}";
+                VALUES (" . implode(', ', $placeholders) . ")";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        $result = $stmt->fetch();
-        return $result[$this->primaryKey];
+        return $this->db->lastInsertId();
     }
 
     /**

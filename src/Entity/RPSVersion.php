@@ -14,7 +14,7 @@ class RPSVersion
     public int $id_rps;
     public int $version_number;
     public ?string $status = null;
-    public ?array $snapshot_data = null; // Will be stored as JSONB
+    public ?array $snapshot_data = null; // Will be stored as JSON
     public ?string $created_by = null;
     public ?string $approved_by = null;
     public ?string $created_at = null;
