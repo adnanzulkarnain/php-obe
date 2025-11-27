@@ -253,13 +253,12 @@ class RPSRepository extends BaseRepository
             (id_rps, version_number, status, snapshot_data, created_by, keterangan, is_active, created_at)
             VALUES
             (:id_rps, :version_number, :status, :snapshot_data, :created_by, :keterangan, :is_active, :created_at)
-            RETURNING id_version
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_version'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
@@ -355,13 +354,12 @@ class RPSRepository extends BaseRepository
             (id_rps, approver, approval_level, status, komentar, created_at)
             VALUES
             (:id_rps, :approver, :approval_level, :status, :komentar, :created_at)
-            RETURNING id_approval
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_approval'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**

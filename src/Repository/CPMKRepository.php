@@ -149,13 +149,12 @@ class CPMKRepository extends BaseRepository
             (id_cpmk, kode_subcpmk, deskripsi, indikator, urutan, created_at, updated_at)
             VALUES
             (:id_cpmk, :kode_subcpmk, :deskripsi, :indikator, :urutan, :created_at, :updated_at)
-            RETURNING id_subcpmk
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_subcpmk'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
@@ -233,13 +232,12 @@ class CPMKRepository extends BaseRepository
             (id_cpmk, id_cpl, bobot_kontribusi, created_at)
             VALUES
             (:id_cpmk, :id_cpl, :bobot_kontribusi, :created_at)
-            RETURNING id_relasi
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_relasi'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
