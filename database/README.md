@@ -17,7 +17,7 @@ database/
 
 ### Prerequisites
 
-1. Ensure PostgreSQL is running
+1. Ensure MySQL is running
 2. Database is created (see main README)
 3. Schema is applied (run the main SQL schema file)
 4. `.env` file is configured with database credentials
@@ -123,7 +123,7 @@ To reset and reseed the database:
 
 ```bash
 # 1. Drop and recreate the database schema
-psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
 # 2. Run the seeder
 php database/seed.php
@@ -158,16 +158,16 @@ private function seedMahasiswa(): void
 If you see database connection errors:
 
 1. Check `.env` file exists and has correct credentials
-2. Verify PostgreSQL is running: `systemctl status postgresql`
-3. Test connection: `psql -U your_user -d obe_system`
+2. Verify MySQL is running: `systemctl status mysql`
+3. Test connection: `mysql -u your_user -p obe_system`
 
 ### Duplicate Data Errors
 
-The seeder uses `ON CONFLICT DO NOTHING` for most inserts, so it's safe to run multiple times. However, if you want clean data:
+The seeder uses `INSERT IGNORE` or `ON DUPLICATE KEY UPDATE` for most inserts, so it's safe to run multiple times. However, if you want clean data:
 
 ```bash
 # Clear all data (careful!)
-psql -U postgres -d obe_system -c "TRUNCATE TABLE mahasiswa, enrollment, kelas, rps, cpmk, cpl, matakuliah, kurikulum, dosen, prodi, fakultas CASCADE;"
+mysql -u root -p obe_system -e "SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE mahasiswa; TRUNCATE TABLE enrollment; TRUNCATE TABLE kelas; TRUNCATE TABLE rps; TRUNCATE TABLE cpmk; TRUNCATE TABLE cpl; TRUNCATE TABLE matakuliah; TRUNCATE TABLE kurikulum; TRUNCATE TABLE dosen; TRUNCATE TABLE prodi; TRUNCATE TABLE fakultas; SET FOREIGN_KEY_CHECKS = 1;"
 
 # Then reseed
 php database/seed.php
@@ -179,7 +179,7 @@ If you get foreign key constraint errors:
 
 1. Ensure the database schema is up to date
 2. Check that the `OBE-Database-Schema-v3-WITH-KURIKULUM.sql` was applied
-3. Verify all extensions are enabled (uuid-ossp, pgcrypto)
+3. Verify MySQL version is 8.0 or higher (for proper UUID and JSON support)
 
 ## Development Notes
 

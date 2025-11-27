@@ -1,7 +1,7 @@
 # OBE System - Outcome-Based Education Management System
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://www.php.net/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-blue)](https://www.postgresql.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-blue)](https://www.mysql.com/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -684,7 +684,7 @@ Repository (KurikulumRepository.php)
    │ 6. Execute via PDO
    │
    ▼
-Database (PostgreSQL)
+Database (MySQL)
    │
    │ 7. Return result set
    │
@@ -812,7 +812,7 @@ Event triggered (e.g., RPS Approval)
 ### Backend
 ```
 Language:       PHP 8.3+
-Database:       PostgreSQL 14+
+Database:       MySQL 8.0+
 Package Manager: Composer 2.x
 Testing:        PHPUnit 11
 Logging:        Monolog 3.x
@@ -889,7 +889,7 @@ Icons:          React Icons (Feather)
 ```bash
 # Required
 PHP >= 8.3
-PostgreSQL >= 14
+MySQL >= 8.0
 Composer >= 2.0
 Node.js >= 18
 npm >= 9
@@ -916,10 +916,10 @@ nano .env
 # Set: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET
 
 # 5. Create database
-createdb obe_system
+mysql -u root -p -e "CREATE DATABASE obe_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 6. Import schema
-psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
 # 7. Run migrations (if any)
 php migrate.php migrate
@@ -1057,7 +1057,7 @@ To reset and reseed the database:
 
 ```bash
 # 1. Re-import schema (drops all data)
-psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
 # 2. Run seeder again
 php database/seed.php
@@ -1493,7 +1493,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **React Team** - For amazing frontend framework
 - **PHP Community** - For excellent libraries
 - **TailwindCSS** - For utility-first CSS
-- **PostgreSQL** - For robust database
+- **MySQL** - For robust database
 - **Vite** - For blazing fast build tool
 
 ## 📞 Support

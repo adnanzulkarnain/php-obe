@@ -13,7 +13,7 @@
 **OBE System** adalah sistem manajemen Outcome-Based Education yang production-ready untuk institusi pendidikan tinggi di Indonesia.
 
 ### Tech Stack
-- **Backend:** PHP 8.3+, PostgreSQL 14+, Composer
+- **Backend:** PHP 8.3+, MySQL 8.0+, Composer
 - **Frontend:** React 18.3, TypeScript 5.6, Vite 7.2, TailwindCSS 3.4
 - **Charts:** Recharts 2.15
 - **State Management:** React Query (TanStack Query)
@@ -469,7 +469,7 @@
 - ✅ **Code Splitting:** Optimized with lazy loading
 
 ### Environment
-- ✅ Backend: PHP 8.3+, PostgreSQL 14+
+- ✅ Backend: PHP 8.3+, MySQL 8.0+
 - ✅ Frontend: Node.js with npm
 - ✅ Docker: Ready (if needed)
 
@@ -535,7 +535,7 @@
 ## 📝 Notes for Developers
 
 ### Getting Started
-1. Backend: PHP 8.3+, PostgreSQL 14+, Composer
+1. Backend: PHP 8.3+, MySQL 8.0+, Composer
 2. Frontend: Node.js 18+, npm
 3. Follow INSTALLATION.md for setup
 

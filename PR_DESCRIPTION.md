@@ -135,7 +135,7 @@ React Icons        - Icon Library
 ### Backend Tech Stack
 ```
 PHP 8.3+           - Server Language
-PostgreSQL 14+     - Database
+MySQL 8.0+         - Database
 Composer 2.x       - Dependency Manager
 PHPUnit 11         - Testing
 Monolog 3.x        - Logging
@@ -196,9 +196,9 @@ php-obe/
 APP_ENV=production
 APP_DEBUG=false
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=3306
 DB_NAME=obe_system
-DB_USER=postgres
+DB_USER=obe_user
 DB_PASSWORD=your_password
 JWT_SECRET=generate_strong_secret_here
 MAIL_HOST=smtp.example.com
@@ -217,10 +217,10 @@ VITE_API_BASE_URL=http://localhost:8000/api
 ### Database Setup
 ```bash
 # 1. Create database
-createdb obe_system
+mysql -u root -p -e "CREATE DATABASE obe_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 2. Import schema
-psql -U postgres -d obe_system -f OBE-Database-Schema-v3-WITH-KURIKULUM.sql
+mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
 # 3. Run migrations
 php migrate.php migrate
@@ -343,7 +343,7 @@ This PR makes the application **production-ready**. Follow the deployment guide 
 ```
 Web Server: Nginx or Apache
 PHP: 8.3+ with FPM
-Database: PostgreSQL 14+
+Database: MySQL 8.0+
 SSL: Let's Encrypt
 ```
 
