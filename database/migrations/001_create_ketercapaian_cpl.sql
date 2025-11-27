@@ -6,27 +6,20 @@
 
 -- Create table ketercapaian_cpl
 CREATE TABLE IF NOT EXISTS ketercapaian_cpl (
-    id_ketercapaian SERIAL PRIMARY KEY,
-    id_enrollment INT REFERENCES enrollment(id_enrollment) ON DELETE CASCADE,
-    id_cpl INT REFERENCES cpl(id_cpl) ON DELETE CASCADE,
-    nilai_cpl NUMERIC(5,2),
-    status_tercapai BOOLEAN,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-    UNIQUE (id_enrollment, id_cpl)
-);
+    id_ketercapaian INT AUTO_INCREMENT PRIMARY KEY,
+    id_enrollment INT,
+    id_cpl INT,
+    nilai_cpl DECIMAL(5,2) COMMENT 'Weighted average of CPMK achievements based on bobot_kontribusi',
+    status_tercapai BOOLEAN COMMENT 'TRUE if nilai_cpl >= batas_kelulusan_cpmk (default 40.01)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_enrollment_cpl (id_enrollment, id_cpl),
+    FOREIGN KEY (id_enrollment) REFERENCES enrollment(id_enrollment) ON DELETE CASCADE,
+    FOREIGN KEY (id_cpl) REFERENCES cpl(id_cpl) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='CPL achievements per student - aggregated from CPMK achievements using relasi_cpmk_cpl';
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpl_enrollment ON ketercapaian_cpl(id_enrollment);
-CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpl_cpl ON ketercapaian_cpl(id_cpl);
-CREATE INDEX IF NOT EXISTS idx_ketercapaian_cpl_status ON ketercapaian_cpl(id_enrollment, status_tercapai);
-
--- Add comments
-COMMENT ON TABLE ketercapaian_cpl IS 'CPL achievements per student - aggregated from CPMK achievements using relasi_cpmk_cpl';
-COMMENT ON COLUMN ketercapaian_cpl.nilai_cpl IS 'Weighted average of CPMK achievements based on bobot_kontribusi';
-COMMENT ON COLUMN ketercapaian_cpl.status_tercapai IS 'TRUE if nilai_cpl >= batas_kelulusan_cpmk (default 40.01)';
-
--- Add trigger for updated_at
-CREATE TRIGGER update_ketercapaian_cpl_updated_at
-BEFORE UPDATE ON ketercapaian_cpl
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE INDEX idx_ketercapaian_cpl_enrollment ON ketercapaian_cpl(id_enrollment);
+CREATE INDEX idx_ketercapaian_cpl_cpl ON ketercapaian_cpl(id_cpl);
+CREATE INDEX idx_ketercapaian_cpl_status ON ketercapaian_cpl(id_enrollment, status_tercapai);

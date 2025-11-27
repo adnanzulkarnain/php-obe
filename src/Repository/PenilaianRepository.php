@@ -91,13 +91,12 @@ class PenilaianRepository extends BaseRepository
             (id_kelas, id_template, nama_komponen, deskripsi, tanggal_pelaksanaan, deadline, bobot_realisasi, nilai_maksimal, created_at, updated_at)
             VALUES
             (:id_kelas, :id_template, :nama_komponen, :deskripsi, :tanggal_pelaksanaan, :deadline, :bobot_realisasi, :nilai_maksimal, :created_at, :updated_at)
-            RETURNING id_komponen
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_komponen'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
@@ -184,20 +183,18 @@ class PenilaianRepository extends BaseRepository
             (id_enrollment, id_komponen, nilai_mentah, nilai_tertimbang, catatan, dinilai_oleh, tanggal_input, updated_at)
             VALUES
             (:id_enrollment, :id_komponen, :nilai_mentah, :nilai_tertimbang, :catatan, :dinilai_oleh, :tanggal_input, :updated_at)
-            ON CONFLICT (id_enrollment, id_komponen)
-            DO UPDATE SET
-                nilai_mentah = EXCLUDED.nilai_mentah,
-                nilai_tertimbang = EXCLUDED.nilai_tertimbang,
-                catatan = EXCLUDED.catatan,
-                dinilai_oleh = EXCLUDED.dinilai_oleh,
-                updated_at = EXCLUDED.updated_at
-            RETURNING id_nilai_detail
+            ON DUPLICATE KEY UPDATE
+                nilai_mentah = VALUES(nilai_mentah),
+                nilai_tertimbang = VALUES(nilai_tertimbang),
+                catatan = VALUES(catatan),
+                dinilai_oleh = VALUES(dinilai_oleh),
+                updated_at = VALUES(updated_at)
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_nilai_detail'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
@@ -386,7 +383,6 @@ class PenilaianRepository extends BaseRepository
         $sql = "
             INSERT INTO jenis_penilaian (nama_jenis, deskripsi)
             VALUES (:nama_jenis, :deskripsi)
-            RETURNING id_jenis
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -395,7 +391,7 @@ class PenilaianRepository extends BaseRepository
             'deskripsi' => $deskripsi
         ]);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_jenis'];
+        return (int)$this->db->lastInsertId();
     }
 
     // ===================================
@@ -412,13 +408,11 @@ class PenilaianRepository extends BaseRepository
             INSERT INTO ketercapaian_cpmk
             (id_enrollment, id_cpmk, nilai_cpmk, status_tercapai, created_at, updated_at)
             VALUES
-            (:id_enrollment, :id_cpmk, :nilai_cpmk, :status_tercapai, NOW(), NOW())
-            ON CONFLICT (id_enrollment, id_cpmk)
-            DO UPDATE SET
-                nilai_cpmk = EXCLUDED.nilai_cpmk,
-                status_tercapai = EXCLUDED.status_tercapai,
-                updated_at = NOW()
-            RETURNING id_ketercapaian
+            (:id_enrollment, :id_cpmk, :nilai_cpmk, :status_tercapai, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                nilai_cpmk = VALUES(nilai_cpmk),
+                status_tercapai = VALUES(status_tercapai),
+                updated_at = CURRENT_TIMESTAMP
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -429,7 +423,7 @@ class PenilaianRepository extends BaseRepository
             'status_tercapai' => $statusTercapai
         ]);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_ketercapaian'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**
@@ -529,13 +523,11 @@ class PenilaianRepository extends BaseRepository
             INSERT INTO ketercapaian_cpl
             (id_enrollment, id_cpl, nilai_cpl, status_tercapai, created_at, updated_at)
             VALUES
-            (:id_enrollment, :id_cpl, :nilai_cpl, :status_tercapai, NOW(), NOW())
-            ON CONFLICT (id_enrollment, id_cpl)
-            DO UPDATE SET
-                nilai_cpl = EXCLUDED.nilai_cpl,
-                status_tercapai = EXCLUDED.status_tercapai,
-                updated_at = NOW()
-            RETURNING id_ketercapaian
+            (:id_enrollment, :id_cpl, :nilai_cpl, :status_tercapai, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE
+                nilai_cpl = VALUES(nilai_cpl),
+                status_tercapai = VALUES(status_tercapai),
+                updated_at = CURRENT_TIMESTAMP
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -546,7 +538,7 @@ class PenilaianRepository extends BaseRepository
             'status_tercapai' => $statusTercapai
         ]);
 
-        return (int)$stmt->fetch(\PDO::FETCH_ASSOC)['id_ketercapaian'];
+        return (int)$this->db->lastInsertId();
     }
 
     /**

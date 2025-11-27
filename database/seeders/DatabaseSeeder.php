@@ -83,9 +83,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO roles (role_name, description)
+            INSERT IGNORE INTO roles (role_name, description)
             VALUES (?, ?)
-            ON CONFLICT (role_name) DO NOTHING
         ");
 
         foreach ($roles as $role) {
@@ -110,9 +109,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO jenis_penilaian (nama_jenis, deskripsi)
+            INSERT IGNORE INTO jenis_penilaian (nama_jenis, deskripsi)
             VALUES (?, ?)
-            ON CONFLICT (nama_jenis) DO NOTHING
         ");
 
         foreach ($jenis as $j) {
@@ -134,9 +132,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO fakultas (id_fakultas, nama)
+            INSERT IGNORE INTO fakultas (id_fakultas, nama)
             VALUES (?, ?)
-            ON CONFLICT (id_fakultas) DO NOTHING
         ");
 
         foreach ($fakultas as $f) {
@@ -158,9 +155,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO prodi (id_prodi, id_fakultas, nama, jenjang, akreditasi, tahun_berdiri)
+            INSERT IGNORE INTO prodi (id_prodi, id_fakultas, nama, jenjang, akreditasi, tahun_berdiri)
             VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT (id_prodi) DO NOTHING
         ");
 
         foreach ($prodi as $p) {
@@ -185,9 +181,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO dosen (id_dosen, nidn, nama, email, phone, id_prodi, status)
+            INSERT IGNORE INTO dosen (id_dosen, nidn, nama, email, phone, id_prodi, status)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (id_dosen) DO NOTHING
         ");
 
         foreach ($dosen as $d) {
@@ -209,10 +204,9 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO kurikulum (id_prodi, kode_kurikulum, nama_kurikulum, tahun_berlaku, tahun_berakhir,
+            INSERT IGNORE INTO kurikulum (id_prodi, kode_kurikulum, nama_kurikulum, tahun_berlaku, tahun_berakhir,
                                    deskripsi, status, is_primary, nomor_sk, tanggal_sk, created_by, approved_by, approved_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($kurikulum as $k) {
@@ -245,9 +239,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO cpl (id_kurikulum, kode_cpl, deskripsi, kategori, urutan, is_active)
+            INSERT IGNORE INTO cpl (id_kurikulum, kode_cpl, deskripsi, kategori, urutan, is_active)
             VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($cpl as $c) {
@@ -281,9 +274,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO matakuliah (kode_mk, id_kurikulum, nama_mk, nama_mk_eng, sks, semester, rumpun, jenis_mk, is_active)
+            INSERT IGNORE INTO matakuliah (kode_mk, id_kurikulum, nama_mk, nama_mk_eng, sks, semester, rumpun, jenis_mk, is_active)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($matakuliah as $mk) {
@@ -484,9 +476,8 @@ class DatabaseSeeder
                 }
 
                 $stmt = $this->pdo->prepare("
-                    INSERT INTO relasi_cpmk_cpl (id_cpmk, id_cpl, bobot_kontribusi)
+                    INSERT IGNORE INTO relasi_cpmk_cpl (id_cpmk, id_cpl, bobot_kontribusi)
                     VALUES (?, ?, ?)
-                    ON CONFLICT DO NOTHING
                 ");
 
                 foreach ($relasi as $r) {
@@ -525,10 +516,9 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO kelas (kode_mk, id_kurikulum, id_rps, nama_kelas, semester, tahun_ajaran,
+            INSERT IGNORE INTO kelas (kode_mk, id_kurikulum, id_rps, nama_kelas, semester, tahun_ajaran,
                                kapasitas, kuota_terisi, hari, jam_mulai, jam_selesai, ruangan, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($kelas as $k) {
@@ -556,9 +546,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO tugas_mengajar (id_kelas, id_dosen, peran)
+            INSERT IGNORE INTO tugas_mengajar (id_kelas, id_dosen, peran)
             VALUES (?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($tugasMengajar as $t) {
@@ -590,9 +579,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO mahasiswa (nim, nama, email, id_prodi, id_kurikulum, angkatan, status)
+            INSERT IGNORE INTO mahasiswa (nim, nama, email, id_prodi, id_kurikulum, angkatan, status)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($mahasiswa as $m) {
@@ -632,9 +620,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO enrollment (nim, id_kelas, tanggal_daftar, status, nilai_akhir, nilai_huruf)
+            INSERT IGNORE INTO enrollment (nim, id_kelas, tanggal_daftar, status, nilai_akhir, nilai_huruf)
             VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($enrollment as $e) {
@@ -659,9 +646,8 @@ class DatabaseSeeder
         ];
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO users (username, email, password_hash, user_type, ref_id, is_active)
+            INSERT IGNORE INTO users (username, email, password_hash, user_type, ref_id, is_active)
             VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT (username) DO NOTHING
         ");
 
         foreach ($users as $u) {
@@ -768,9 +754,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO nilai_detail (id_enrollment, id_komponen, nilai_mentah, dinilai_oleh)
+            INSERT IGNORE INTO nilai_detail (id_enrollment, id_komponen, nilai_mentah, dinilai_oleh)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($nilai as $n) {
@@ -803,9 +788,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO ketercapaian_cpmk (id_enrollment, id_cpmk, nilai_cpmk, status_tercapai)
+            INSERT IGNORE INTO ketercapaian_cpmk (id_enrollment, id_cpmk, nilai_cpmk, status_tercapai)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($ketercapaian as $k) {
@@ -846,10 +830,9 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO rencana_mingguan (id_rps, minggu_ke, id_subcpmk, materi, metode, aktivitas,
+            INSERT IGNORE INTO rencana_mingguan (id_rps, minggu_ke, id_subcpmk, materi, metode, aktivitas,
                                           media_software, media_hardware, pengalaman_belajar, estimasi_waktu_menit)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($rencana as $r) {
@@ -904,9 +887,8 @@ class DatabaseSeeder
         }
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO ambang_batas (id_rps, batas_kelulusan_cpmk, batas_kelulusan_mk, persentase_mahasiswa_lulus)
+            INSERT IGNORE INTO ambang_batas (id_rps, batas_kelulusan_cpmk, batas_kelulusan_mk, persentase_mahasiswa_lulus)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
         ");
 
         foreach ($ambangBatas as $ab) {
