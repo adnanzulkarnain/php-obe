@@ -22,12 +22,12 @@ class Database
         if (self::$connection === null) {
             try {
                 $host = $_ENV['DB_HOST'] ?? 'localhost';
-                $port = $_ENV['DB_PORT'] ?? '5432';
+                $port = $_ENV['DB_PORT'] ?? '3306';
                 $dbname = $_ENV['DB_NAME'] ?? 'obe_system';
                 $user = $_ENV['DB_USER'] ?? 'obe_user';
                 $password = $_ENV['DB_PASSWORD'] ?? '';
 
-                $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+                $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
 
                 self::$connection = new PDO($dsn, $user, $password, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
