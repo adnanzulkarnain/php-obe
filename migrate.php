@@ -4,13 +4,12 @@
 /**
  * Database Migration CLI
  * Usage: php migrate.php [command]
- * Commands: migrate, rollback, reset, status, seed
+ * Commands: migrate, rollback, reset, status
  */
 
 require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Core\Migration;
-use Database\Seeders\DatabaseSeeder;
 
 // Load environment
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -82,28 +81,6 @@ switch ($command) {
         }
         break;
 
-    case 'seed':
-        echo "Seeding database...\n\n";
-        $seeder = new DatabaseSeeder();
-        $seeder->run();
-        break;
-
-    case 'fresh':
-        echo "Fresh migration (reset + migrate + seed)...\n\n";
-
-        echo "Step 1: Resetting...\n";
-        $migration->reset();
-
-        echo "\nStep 2: Migrating...\n";
-        $migration->migrate();
-
-        echo "\nStep 3: Seeding...\n";
-        $seeder = new DatabaseSeeder();
-        $seeder->run();
-
-        echo "\n✓ Fresh migration completed!\n";
-        break;
-
     case 'help':
     default:
         echo "Available commands:\n\n";
@@ -111,16 +88,14 @@ switch ($command) {
         echo "  rollback [steps]     Rollback last batch(es) of migrations\n";
         echo "  reset                Rollback all migrations\n";
         echo "  status               Show migration status\n";
-        echo "  seed                 Seed database with sample data\n";
-        echo "  fresh                Reset, migrate, and seed database\n";
         echo "  help                 Show this help message\n";
         echo "\nExamples:\n";
         echo "  php migrate.php migrate\n";
         echo "  php migrate.php rollback\n";
         echo "  php migrate.php rollback 2\n";
         echo "  php migrate.php status\n";
-        echo "  php migrate.php seed\n";
-        echo "  php migrate.php fresh\n";
+        echo "\nNote: To import dummy data, use the SQL file:\n";
+        echo "  mysql -u username -p database_name < database/dummy-data.sql\n";
         break;
 }
 
