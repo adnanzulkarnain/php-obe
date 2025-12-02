@@ -50,7 +50,7 @@
 - ✅ **Security Headers** - CSP, HSTS, X-Frame-Options
 - ✅ **Request Logging** - Performance monitoring
 - ✅ **Health Check** - System monitoring endpoints
-- ✅ **Database Seeding** - Comprehensive sample data for testing & demo
+- ✅ **Data Dummy SQL** - Comprehensive sample data untuk testing & demo
 
 ### Frontend Features (100% Complete)
 
@@ -924,8 +924,8 @@ mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 # 7. Run migrations (if any)
 php migrate.php migrate
 
-# 8. Seed comprehensive sample data
-php database/seed.php
+# 8. Import data dummy (optional - untuk testing/demo)
+mysql -u root -p obe_system < database/dummy-data.sql
 
 # 9. Set permissions
 chmod -R 755 storage logs
@@ -957,22 +957,23 @@ npm run build
 # Output: frontend/dist/
 ```
 
-## 📊 Database Seeding
+## 📊 Import Data Dummy
 
-Sistem ini menyediakan **comprehensive database seeder** yang mengisi database dengan data sampel lengkap untuk mendemonstrasikan seluruh workflow OBE dari awal hingga akhir.
+Sistem ini menyediakan **file SQL data dummy** yang berisi data sampel lengkap untuk mendemonstrasikan seluruh workflow OBE dari awal hingga akhir.
 
-### ✨ Kenapa Perlu Database Seeding?
+### ✨ Kenapa Perlu Data Dummy?
 
 - 🚀 **Quick Start**: Langsung bisa demo aplikasi tanpa input data manual
 - 🧪 **Testing**: Data realistis untuk testing fitur-fitur sistem
 - 📚 **Learning**: Memahami struktur data dan relationship dalam sistem OBE
 - 🎯 **Development**: Data konsisten untuk development dan debugging
+- 📁 **Mudah di-import**: Cukup satu perintah SQL untuk import semua data
 
 ---
 
-### 📦 Data yang Di-seed
+### 📦 Data yang Tersedia
 
-Seeder akan mengisi **18+ tabel** dengan data yang saling berelasi:
+File SQL akan mengisi **25+ tabel** dengan data yang saling berelasi:
 
 #### 1️⃣ Master Data & Users
 ```
@@ -1075,7 +1076,7 @@ Seeder akan mengisi **18+ tabel** dengan data yang saling berelasi:
 
 ---
 
-### 🚀 Cara Menjalankan Seeder
+### 🚀 Cara Import Data Dummy
 
 #### Prerequisites
 ```bash
@@ -1086,85 +1087,67 @@ cat .env | grep DB_
 mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 ```
 
-#### Jalankan Seeder
+#### Import Data Dummy
 ```bash
-# Dari root directory project
-php database/seed.php
+# Method 1: Via command line (Linux/Mac)
+mysql -u root -p obe_system < database/dummy-data.sql
+
+# Method 2: Via PHPMyAdmin
+# 1. Login ke PHPMyAdmin
+# 2. Pilih database 'obe_system'
+# 3. Klik tab "Import"
+# 4. Pilih file 'database/dummy-data.sql'
+# 5. Klik "Go"
+
+# Method 3: Via MySQL Workbench
+# 1. Buka MySQL Workbench
+# 2. Connect ke database
+# 3. File → Run SQL Script
+# 4. Pilih file 'database/dummy-data.sql'
+# 5. Execute
 ```
 
 #### Output yang Diharapkan
+```bash
+# Saat import via command line
+mysql -u root -p obe_system < database/dummy-data.sql
+Enter password: ****
+
+# Jika sukses, tidak ada output error
+# Query akan berjalan dalam beberapa detik
+
+# Verifikasi import berhasil:
+mysql -u root -p obe_system -e "SELECT COUNT(*) FROM mahasiswa;"
++----------+
+| COUNT(*) |
++----------+
+|       50 |
++----------+
+
+mysql -u root -p obe_system -e "SELECT COUNT(*) FROM users;"
++----------+
+| COUNT(*) |
++----------+
+|        6 |
++----------+
 ```
-╔═══════════════════════════════════════════════════════════╗
-║       OBE System - Database Seeder                       ║
-╚═══════════════════════════════════════════════════════════╝
 
-=== Starting Database Seeding ===
+#### Kredensial Login Setelah Import
+```
+✅ Data dummy berhasil di-import!
 
-📝 Seeding roles...
-📝 Seeding jenis penilaian...
-🏛️  Seeding fakultas...
-🎓 Seeding prodi...
-👨‍🏫 Seeding dosen...
-📚 Seeding kurikulum...
-🎯 Seeding CPL...
-📖 Seeding mata kuliah...
-🔗 Seeding prasyarat...
-📋 Seeding RPS...
-🎯 Seeding CPMK...
-📌 Seeding SubCPMK...
-🔗 Seeding relasi CPMK-CPL...
-🏫 Seeding kelas...
-👨‍🏫 Seeding tugas mengajar...
-👨‍🎓 Seeding mahasiswa...
-📝 Seeding enrollment...
-👤 Seeding users...
-📊 Seeding template penilaian...
-📋 Seeding komponen penilaian...
-💯 Seeding nilai detail...
-🎯 Seeding ketercapaian CPMK...
-📅 Seeding rencana mingguan...
-📚 Seeding pustaka...
-⚖️  Seeding ambang batas...
-📝 Seeding realisasi pertemuan...
-✅ Seeding kehadiran...
-
-=== Database Seeded Successfully! ===
-
-📊 Seeding Summary:
-==================
-   Fakultas: 3 records
-   Prodi: 3 records
-   Dosen: 6 records
-   Kurikulum: 3 records
-   Cpl: 9 records
-   Matakuliah: 10 records
-   Rps: 3 records
-   Cpmk: 12 records
-   Subcpmk: 3 records
-   Kelas: 6 records
-   Mahasiswa: 50 records
-   Enrollment: 105 records
-   Users: 6 records
-   Komponen_penilaian: 12 records
-   Nilai_detail: 100 records
-   Ketercapaian_cpmk: 200 records
-   Realisasi_pertemuan: 20 records
-   Kehadiran: 350+ records
-
-✅ Sample Login Credentials:
-   Admin: admin / admin123
-   Kaprodi: kaprodi_tif / kaprodi123
-   Dosen: dosen1 / dosen123
-   Mahasiswa: 202401001 / mhs123
-
-╔═══════════════════════════════════════════════════════════╗
-║  ✅  Database seeding completed successfully!            ║
-╚═══════════════════════════════════════════════════════════╝
+Login Credentials:
+   Admin:      admin / admin123
+   Kaprodi:    kaprodi_tif / kaprodi123
+   Dosen:      dosen1 / dosen123
+   Dosen:      dosen2 / dosen123
+   Mahasiswa:  20240100001 / mhs123
+   Mahasiswa:  20240100002 / mhs123
 ```
 
 ---
 
-### 🎯 Kredensial Login Setelah Seeding
+### 🎯 Kredensial Login Detail
 
 | Role | Username | Password | Ref ID | Keterangan |
 |------|----------|----------|--------|------------|
@@ -1172,26 +1155,26 @@ php database/seed.php
 | **Kaprodi** | `kaprodi_tif` | `kaprodi123` | DSN001 | Approve RPS, kurikulum |
 | **Dosen** | `dosen1` | `dosen123` | DSN002 | Create RPS, input nilai |
 | **Dosen** | `dosen2` | `dosen123` | DSN003 | Create RPS, input nilai |
-| **Mahasiswa** | `202401001` | `mhs123` | 202401001 | View nilai, enroll KRS |
-| **Mahasiswa** | `202401002` | `mhs123` | 202401002 | View nilai, enroll KRS |
+| **Mahasiswa** | `20240100001` | `mhs123` | 20240100001 | View nilai, enroll KRS |
+| **Mahasiswa** | `20240100002` | `mhs123` | 20240100002 | View nilai, enroll KRS |
 
 **Note**:
-- 50 mahasiswa dibuat dengan NIM `202401001` sampai `202401050`, semua password: `mhs123`
+- 50 mahasiswa dibuat dengan NIM `20240100001` sampai `20240100050`, semua password: `mhs123`
 - 6 dosen dibuat dengan ID `DSN001` sampai `DSN006`
 
 ---
 
-### ⚙️ Fitur-fitur Seeder
+### ⚙️ Keuntungan Import SQL
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| 🔒 **Transaction-safe** | Automatic rollback jika terjadi error - database tetap konsisten |
-| 🔄 **Idempotent** | Aman dijalankan berkali-kali (uses `INSERT IGNORE`) |
+| Keuntungan | Deskripsi |
+|------------|-----------|
+| ⚡ **Cepat** | Import langsung ke database tanpa overhead PHP processing |
+| 🔄 **Idempotent** | Aman dijalankan berkali-kali (menggunakan `INSERT IGNORE`) |
 | 🎯 **Comprehensive** | Full OBE workflow dari kurikulum → assessment → achievement |
 | 📊 **Realistic Data** | Proper relationships, realistic values, dan valid constraints |
-| ❌ **Error Handling** | Clear error messages dengan stack trace untuk debugging |
-| 📈 **Summary Report** | Menampilkan jumlah records per tabel setelah seeding |
 | 🔗 **Relational Integrity** | Semua foreign keys valid dan relationships terjaga |
+| 📁 **Mudah Dibagikan** | File SQL bisa langsung dibagikan ke tim tanpa perlu setup PHP |
+| 🛠️ **Universal** | Bisa di-import via CLI, PHPMyAdmin, MySQL Workbench, atau tools lainnya |
 
 ---
 
@@ -1224,20 +1207,21 @@ Seeded data mendemonstrasikan workflow OBE yang lengkap:
 
 ---
 
-### 🔄 Reset & Re-seed Database
+### 🔄 Reset & Re-import Data Dummy
 
-Jika ingin reset semua data dan seed ulang:
+Jika ingin reset semua data dan import ulang:
 
-#### Method 1: Re-import Schema (DROPS ALL DATA)
+#### Method 1: Re-import Schema + Data (DROPS ALL DATA - RECOMMENDED)
 ```bash
 # WARNING: Ini akan menghapus semua data!
+# Step 1: Re-import schema (akan drop semua table dan data)
 mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 
-# Kemudian run seeder lagi
-php database/seed.php
+# Step 2: Import data dummy
+mysql -u root -p obe_system < database/dummy-data.sql
 ```
 
-#### Method 2: Truncate Tables (Faster, tapi harus hati-hati dengan FK)
+#### Method 2: Truncate Tables (Lebih cepat, tapi harus hati-hati dengan FK)
 ```bash
 # Login ke MySQL
 mysql -u root -p obe_system
@@ -1246,51 +1230,70 @@ mysql -u root -p obe_system
 SET FOREIGN_KEY_CHECKS = 0;
 
 # Truncate semua tables (atau selective tables)
-TRUNCATE TABLE users;
+TRUNCATE TABLE kehadiran;
+TRUNCATE TABLE realisasi_pertemuan;
+TRUNCATE TABLE nilai_detail;
+TRUNCATE TABLE ketercapaian_cpmk;
+TRUNCATE TABLE komponen_penilaian;
+TRUNCATE TABLE template_penilaian;
 TRUNCATE TABLE enrollment;
-# ... dan seterusnya
+TRUNCATE TABLE mahasiswa;
+TRUNCATE TABLE users;
+# ... dan seterusnya (truncate dalam urutan yang benar)
 
 # Enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
 
-# Exit dan run seeder
+# Exit dan import data dummy
 exit
-php database/seed.php
+mysql -u root -p obe_system < database/dummy-data.sql
 ```
 
 ---
 
 ### 🐛 Troubleshooting
 
-#### Error: "Error: .env file not found!"
+#### Error: "ERROR 1049 (42000): Unknown database 'obe_system'"
 ```bash
-# Pastikan .env file ada
-cp .env.example .env
-nano .env  # Edit DB credentials
+# Database belum dibuat
+mysql -u root -p -e "CREATE DATABASE obe_system;"
 ```
 
-#### Error: "SQLSTATE[42S02]: Base table or view not found"
+#### Error: "ERROR 1146 (42S02): Table 'obe_system.xxx' doesn't exist"
 ```bash
 # Schema belum di-import
 mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
 ```
 
-#### Error: "SQLSTATE[23000]: Integrity constraint violation"
+#### Error: "ERROR 1062 (23000): Duplicate entry"
 ```bash
-# Seeder sudah pernah dijalankan atau ada data existing
-# Re-import schema untuk clean slate:
+# Data sudah pernah di-import sebelumnya
+# Option 1: Abaikan error (data sudah ada, OK)
+# Option 2: Re-import schema untuk clean slate:
 mysql -u root -p obe_system < OBE-Database-Schema-v3-WITH-KURIKULUM.sql
-php database/seed.php
+mysql -u root -p obe_system < database/dummy-data.sql
 ```
 
-#### Error: "Connection refused"
+#### Error: "ERROR 2002 (HY000): Can't connect to local MySQL server"
 ```bash
 # Cek MySQL service running
 sudo systemctl status mysql
 sudo systemctl start mysql
 
-# Cek credentials di .env
-cat .env | grep DB_
+# Atau untuk Mac:
+brew services start mysql
+```
+
+#### Import terlalu lama / timeout
+```bash
+# Increase MySQL timeout settings
+mysql -u root -p -e "SET GLOBAL max_allowed_packet=1073741824;"
+mysql -u root -p -e "SET GLOBAL wait_timeout=600;"
+
+# Atau edit my.cnf / my.ini:
+[mysqld]
+max_allowed_packet=1G
+wait_timeout=600
 ```
 
 ---
@@ -1299,22 +1302,23 @@ cat .env | grep DB_
 
 Untuk detail lebih lanjut tentang:
 - Database schema design → Lihat `OBE-Database-Schema-v3-WITH-KURIKULUM.sql`
-- Seeder implementation → Lihat `database/seeders/DatabaseSeeder.php`
-- Database migrations → Lihat `database/README.md` (jika ada)
+- Data dummy SQL → Lihat `database/dummy-data.sql`
+- Database migrations → Jalankan `php migrate.php help`
 
 ---
 
 ### 💡 Tips & Best Practices
 
 ✅ **DO**:
-- Run seeder di **development/testing environment** untuk demo dan testing
-- Gunakan seeded data sebagai **reference** untuk struktur data yang benar
-- Re-seed jika butuh **clean slate** untuk testing
+- Import data dummy di **development/testing environment** untuk demo dan testing
+- Gunakan data dummy sebagai **reference** untuk struktur data yang benar
+- Re-import jika butuh **clean slate** untuk testing
+- **Backup database** sebelum import jika ada data penting
 
 ❌ **DON'T**:
-- Jangan run seeder di **production** (gunakan migration untuk prod)
-- Jangan edit seeded data jika mau test workflow (re-seed untuk fresh data)
-- Jangan lupa **backup** jika ada data penting sebelum re-import schema
+- Jangan import data dummy di **production** (hanya untuk development)
+- Jangan edit data dummy jika mau test workflow (re-import untuk fresh data)
+- Jangan lupa cek **database credentials** sebelum import
 
 ## 🎯 Usage
 
